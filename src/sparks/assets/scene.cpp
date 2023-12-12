@@ -66,6 +66,9 @@ void Scene::SetCamera(const Camera &camera) {
 }
 
 glm::mat4 Scene::GetCameraToWorld() const {
+  /*
+  Transform coordinates in the camera space into coordinates in the real space. 
+  */
   return glm::translate(glm::mat4{1.0f}, camera_position_) *
          ComposeRotation(camera_pitch_yaw_roll_) *
          glm::scale(glm::mat4{1.0f}, glm::vec3{1.0f, 1.0f, 1.0f});
@@ -116,8 +119,8 @@ const glm::vec3 &Scene::GetCameraPitchYawRoll() const {
 void Scene::UpdateEnvmapConfiguration() {
   const auto &scene = *this;
   auto envmap_id = scene.GetEnvmapId();
-  auto &envmap_texture = scene.GetTextures()[envmap_id];
-  auto buffer = envmap_texture.GetBuffer();
+  auto &envmap_texture = scene.GetTextures()[envmap_id]; // One of the texture is for the environment. 
+  auto buffer = envmap_texture.GetBuffer(); // The buffer of the environment map texture. 
 
   envmap_minor_color_ = glm::vec3{0.0f};
   envmap_major_color_ = glm::vec3{0.0f};
@@ -127,6 +130,7 @@ void Scene::UpdateEnvmapConfiguration() {
   auto inv_width = 1.0f / float(envmap_texture.GetWidth());
   auto inv_height = 1.0f / float(envmap_texture.GetHeight());
   for (int i = 0; i <= envmap_texture.GetHeight(); i++) {
+    // Notice that the sample scale grows from 0 to 2.
     float x = float(i) * glm::pi<float>() * inv_height;
     sample_scale_[i] = (-std::cos(x) + 1.0f) * 0.5f;
   }
@@ -138,11 +142,13 @@ void Scene::UpdateEnvmapConfiguration() {
     auto scale = sample_scale_[y + 1] - sample_scale_[y];
 
     auto theta = (float(y) + 0.5f) * inv_height * glm::pi<float>();
+    // Notice that this is pi
     auto sin_theta = std::sin(theta);
     auto cos_theta = std::cos(theta);
 
     for (int x = 0; x < envmap_texture.GetWidth(); x++) {
       auto phi = (float(x) + 0.5f) * inv_width * glm::pi<float>() * 2.0f;
+      // While this is 2pi
       auto sin_phi = std::sin(phi);
       auto cos_phi = std::cos(phi);
 
@@ -171,7 +177,11 @@ void Scene::UpdateEnvmapConfiguration() {
     v *= inv_total_weight;
   }
 }
+
 glm::vec3 Scene::GetEnvmapLightDirection() const {
+  /*
+  Notice that there might be a rotation around the major axis of the environment sphere. 
+  */
   float sin_offset = std::sin(envmap_offset_);
   float cos_offset = std::cos(envmap_offset_);
   return {cos_offset * envmap_light_direction_.x +
@@ -195,6 +205,9 @@ float Scene::TraceRay(const glm::vec3 &origin,
                       float t_min,
                       float t_max,
                       HitRecord *hit_record) const {
+  /*
+  Track the first intersection point of the ray with the scene. 
+  */
   float result = -1.0f;
   HitRecord local_hit_record;
   float local_result;
@@ -240,6 +253,9 @@ float Scene::TraceRay(const glm::vec3 &origin,
 }
 
 glm::vec4 Scene::SampleEnvmap(const glm::vec3 &direction) const {
+  /*
+  Sample the texel in the environment texture. 
+  */
   float x = envmap_offset_;
   float y = acos(direction.y) * INV_PI;
   if (glm::length(glm::vec2{direction.x, direction.y}) > 1e-4) {

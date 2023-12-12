@@ -22,5 +22,5 @@ float AcceleratedMesh::TraceRay(const glm::vec3 &origin,
 
 void AcceleratedMesh::BuildAccelerationStructure() {
 }
-
+// TODO
 }  // namespace sparks

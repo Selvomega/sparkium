@@ -31,6 +31,9 @@ Texture::Texture(uint32_t width,
 }
 
 void Texture::Resize(uint32_t width, uint32_t height) {
+  /*
+  This method does not stretch the texture, but cut or pad it. 
+  */
   std::vector<glm::vec4> new_buffer(width * height);
   for (int i = 0; i < std::min(height, height_); i++) {
     std::memcpy(new_buffer.data() + width * i, buffer_.data() + width_ * i,
@@ -42,6 +45,9 @@ void Texture::Resize(uint32_t width, uint32_t height) {
 }
 
 bool Texture::Load(const std::string &file_path, Texture &texture) {
+  /*
+  Notice that the input texture is passed as a reference. 
+  */
   int x, y, c;
   if (absl::EndsWithIgnoreCase(file_path, ".hdr")) {
     auto result = stbi_loadf(file_path.c_str(), &x, &y, &c, 4);
@@ -117,6 +123,9 @@ glm::vec4 &Texture::operator()(int x, int y) {
 }
 
 const glm::vec4 &Texture::operator()(int x, int y) const {
+  /*
+  The inputs are clipped in this method. 
+  */
   x = std::min(int(width_ - 1), std::max(x, 0));
   y = std::min(int(height_ - 1), std::max(y, 0));
   return buffer_[y * width_ + x];

@@ -20,6 +20,7 @@ Mesh::Mesh(const std::vector<Vertex> &vertices,
 }
 
 Mesh Mesh::Cube(const glm::vec3 &center, const glm::vec3 &size) {
+  // TODO ?
   return {{}, {}};
 }
 
@@ -34,6 +35,7 @@ Mesh Mesh::Sphere(const glm::vec3 &center, float radius) {
     float omega = inv_precision * float(i) * pi;
     circle.emplace_back(-std::sin(omega), -std::cos(omega));
   }
+  // The circle lies in the xoz plane. 
   for (int i = 0; i <= precision; i++) {
     float theta = inv_precision * float(i) * pi;
     float sin_theta = std::sin(theta);
@@ -50,6 +52,8 @@ Mesh Mesh::Sphere(const glm::vec3 &center, float radius) {
         if (j == 2 * precision) {
           j1 = 0;
         }
+        // Indices are used to determine triangles and apply algorithms.
+        // What about the North/South pole?
         indices.push_back(i * (2 * precision + 1) + j1);
         indices.push_back(i * (2 * precision + 1) + j);
         indices.push_back(i_1 * (2 * precision + 1) + j);
@@ -81,8 +85,13 @@ float Mesh::TraceRay(const glm::vec3 &origin,
                      const glm::vec3 &direction,
                      float t_min,
                      HitRecord *hit_record) const {
+  /*
+  `t_min` is used to eliminate the hit points which are too close to the origin. 
+  `*hit_record` should not be nullptr?
+  */
   float result = -1.0f;
   for (int i = 0; i < indices_.size(); i += 3) {
+    // Retrieve the triangles. 
     int j = i + 1, k = i + 2;
     const auto &v0 = vertices_[indices_[i]];
     const auto &v1 = vertices_[indices_[j]];
@@ -91,29 +100,34 @@ float Mesh::TraceRay(const glm::vec3 &origin,
     glm::mat3 A = glm::mat3(v1.position - v0.position,
                             v2.position - v0.position, -direction);
     if (std::abs(glm::determinant(A)) < 1e-9f) {
+      // The direction is parallel to the plane of the triangle. 
       continue;
     }
     A = glm::inverse(A);
     auto uvt = A * (origin - v0.position);
+    // `uvt.x` and `uvt.y` determine the intersection point of the ray with the plane of the triangle. 
     auto &t = uvt.z;
     if (t < t_min || (result > 0.0f && t > result)) {
+      // If the distance is too close or there has already been closer intersections. 
       continue;
     }
     auto &u = uvt.x;
     auto &v = uvt.y;
     auto w = 1.0f - u - v;
-    auto position = origin + t * direction;
+    auto position = origin + t * direction; // The intersection position. 
     if (u >= 0.0f && v >= 0.0f && u + v <= 1.0f) {
+      // The intersection point lies in the triangle. 
       result = t;
       if (hit_record) {
         auto geometry_normal = glm::normalize(
             glm::cross(v2.position - v0.position, v1.position - v0.position));
+        // The geometry normal is the normal of model. 
         if (glm::dot(geometry_normal, direction) < 0.0f) {
           hit_record->position = position;
-          hit_record->geometry_normal = geometry_normal;
-          hit_record->normal = v0.normal * w + v1.normal * u + v2.normal * v;
+          hit_record->geometry_normal = geometry_normal; // To make sure that the geometry normal points to the direction where the ray comes.
+          hit_record->normal = v0.normal * w + v1.normal * u + v2.normal * v; // The normal is the processed normal. 
           hit_record->tangent =
-              v0.tangent * w + v1.tangent * u + v2.tangent * v;
+              v0.tangent * w + v1.tangent * u + v2.tangent * v; // What is the weighted tagent used for?
           hit_record->tex_coord =
               v0.tex_coord * w + v1.tex_coord * u + v2.tex_coord * v;
           hit_record->front_face = true;
@@ -130,6 +144,7 @@ float Mesh::TraceRay(const glm::vec3 &origin,
       }
     }
   }
+  // The result is just the distance. 
   return result;
 }
 
@@ -264,6 +279,9 @@ bool Mesh::LoadObjFile(const std::string &obj_file_path, Mesh &mesh) {
 }
 
 void Mesh::MergeVertices() {
+  /*
+  Merge the duplicated vertices. 
+  */
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
   std::unordered_map<Vertex, uint32_t, VertexHash> vertex_index_map;

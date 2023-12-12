@@ -32,6 +32,9 @@ bool AxisAlignedBoundingBox::IsIntersect(const glm::vec3 &origin,
                                          const glm::vec3 &direction,
                                          float t_min,
                                          float t_max) const {
+  /*
+  Check whether the ray with given range of parameters has a intersection with the bounding box.
+  */
   if (x_low <= origin.x && origin.x <= x_high && y_low <= origin.y &&
       origin.y <= y_high && z_low <= origin.z && origin.z <= z_high) {
     return true;

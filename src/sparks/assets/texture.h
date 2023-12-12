@@ -5,6 +5,7 @@
 
 namespace sparks {
 
+// Different types of sampling strategies for the texture. 
 enum SampleType { SAMPLE_TYPE_LINEAR = 0, SAMPLE_TYPE_NEAREST = 1 };
 
 class Texture {
@@ -33,7 +34,7 @@ class Texture {
  private:
   uint32_t width_{};
   uint32_t height_{};
-  std::vector<glm::vec4> buffer_;
+  std::vector<glm::vec4> buffer_; // The color of pixels in the texture.
   SampleType sample_type_{SAMPLE_TYPE_LINEAR};
 };
 }  // namespace sparks

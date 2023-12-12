@@ -14,14 +14,16 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
                                 int x,
                                 int y,
                                 int sample) const {
+  // TODO
   glm::vec3 throughput{1.0f};
   glm::vec3 radiance{0.0f};
   HitRecord hit_record;
   const int max_bounce = render_settings_->num_bounces;
-  std::mt19937 rd(sample ^ x ^ y);
+  std::mt19937 rd(sample ^ x ^ y); // Pseudorandom generator. 
   for (int i = 0; i < max_bounce; i++) {
     auto t = scene_->TraceRay(origin, direction, 1e-3f, 1e4f, &hit_record);
     if (t > 0.0f) {
+      // Get the material of the hit variable. 
       auto &material =
           scene_->GetEntity(hit_record.hit_entity_id).GetMaterial();
       if (material.material_type == MATERIAL_TYPE_EMISSION) {
@@ -33,11 +35,13 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
             glm::vec3{scene_->GetTextures()[material.albedo_texture_id].Sample(
                 hit_record.tex_coord)};
         origin = hit_record.position;
+        // Recall that the environment is a huge sphere at "infinity"
         direction = scene_->GetEnvmapLightDirection();
         radiance += throughput * scene_->GetEnvmapMinorColor();
         throughput *=
             std::max(glm::dot(direction, hit_record.normal), 0.0f) * 2.0f;
         if (scene_->TraceRay(origin, direction, 1e-3f, 1e4f, nullptr) < 0.0f) {
+          // If the ray to the environment is not blocked, which means that the environment light can directly reach the object. 
           radiance += throughput * scene_->GetEnvmapMajorColor();
         }
         break;

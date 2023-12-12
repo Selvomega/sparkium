@@ -27,5 +27,6 @@ class AcceleratedMesh : public Mesh {
   /*
    * You can add your acceleration structure contents here.
    * */
+  // TODO 
 };
 }  // namespace sparks

@@ -9,6 +9,10 @@ namespace sparks {
 glm::mat4 Camera::GetProjectionMatrix(float aspect,
                                       float t_min,
                                       float t_max) const {
+  /*
+  glm::scale is used to flip the y axis.
+  glm::perspectiveZO is used to create a zero-to-one 4x4 perspective projection matrix. 
+  */                                      
   return glm::scale(glm::mat4{1.0f}, glm::vec3{1.0f, -1.0f, 1.0f}) *
          glm::perspectiveZO(glm::radians(fov_), aspect, t_min, t_max);
 }
@@ -28,6 +32,9 @@ bool Camera::ImGuiItems() {
 }
 
 void Camera::UpdateFov(float delta) {
+  /*
+  Update the FoV and clip it into the given range. 
+  */
   fov_ += delta;
   fov_ = glm::clamp(fov_, 1.0f, 160.0f);
 }
@@ -41,6 +48,13 @@ void Camera::GenerateRay(float aspect,
                          float rand_v,
                          float rand_w,
                          float rand_r) const {
+  /*
+  The camera looks to the negative direction of z-axis. 
+  It seems that `pos.x` and `pos.y` are ratios of the rectangular scene. 
+  The generated ray will be given to `origin` and `direction`. 
+  The origin will lie in the aperture of the camera. 
+  The random values are in [0,1]
+  */
   auto pos = (range_high - range_low) * glm::vec2{rand_u, rand_v} + range_low;
   pos = pos * 2.0f - 1.0f;
   pos.y *= -1.0f;

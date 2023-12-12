@@ -37,7 +37,7 @@ class Entity {
  private:
   std::unique_ptr<Model> model_;
   Material material_{};
-  glm::mat4 transform_{1.0f};
+  glm::mat4 transform_{1.0f}; // Encapsulating the position, orientation and scale of the model. 
   std::string name_;
 };
 }  // namespace sparks

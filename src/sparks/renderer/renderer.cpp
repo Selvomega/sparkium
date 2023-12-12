@@ -196,6 +196,9 @@ void Renderer::RayGeneration(int x,
                              int sample,
                              glm::vec3 &color_result,
                              PathTracer &path_tracer) const {
+  /*
+  Use x and y to designate a pixel, then randomly generate a ray within that pixel. 
+  */
   std::mt19937 xrd(x);
   std::mt19937 yrd(y + std::uniform_int_distribution<int>()(xrd));
   std::mt19937 rd(sample + std::uniform_int_distribution<int>()(yrd));
@@ -213,8 +216,10 @@ void Renderer::RayGeneration(int x,
       std::uniform_real_distribution<float>(0.0f, 1.0f)(rd),
       std::uniform_real_distribution<float>(0.0f, 1.0f)(rd));
   auto camera_to_world = scene_.GetCameraToWorld();
+  // Change the ray origin and direction to the real-world case. 
   origin = camera_to_world * glm::vec4(origin, 1.0f);
   direction = camera_to_world * glm::vec4(direction, 0.0f);
+  // Use path tracer to get the color result. 
   color_result = path_tracer.SampleRay(origin, direction, x, y, sample);
 }
 
