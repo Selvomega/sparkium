@@ -2,6 +2,7 @@
 #include "cstdint"
 #include "glm/glm.hpp"
 #include "sparks/assets/util.h"
+#include "sparks/assets/hit_record.h"
 
 namespace sparks {
 
@@ -26,5 +27,8 @@ struct Material {
   Material() = default;
   explicit Material(const glm::vec3 &albedo);
   Material(Scene *scene, const tinyxml2::XMLElement *material_element);
+
+  [[nodiscard]] glm::vec3 BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const HitRecord &hit_record, const Scene* scene) const;
+  [[nodiscard]] std::pair<glm::vec3,float> ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
 };
 }  // namespace sparks

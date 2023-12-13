@@ -245,6 +245,7 @@ float Scene::TraceRay(const glm::vec3 &origin,
     }
   }
   if (hit_record) {
+    // All things in hit_record are normalized. 
     hit_record->geometry_normal = glm::normalize(hit_record->geometry_normal);
     hit_record->normal = glm::normalize(hit_record->normal);
     hit_record->tangent = glm::normalize(hit_record->tangent);

@@ -2,6 +2,7 @@
 #include "glm/glm.hpp"
 #include "string"
 #include "tinyxml2.h"
+#include "sparks/assets/hit_record.h"
 
 namespace sparks {
 glm::vec3 DecomposeRotation(glm::mat3 R);
@@ -17,5 +18,7 @@ glm::vec4 StringToVec4(const std::string &s);
 glm::mat4 XmlTransformMatrix(tinyxml2::XMLElement *transform_element);
 
 glm::mat4 XmlComposeTransformMatrix(tinyxml2::XMLElement *object_element);
+
+bool SanityCheck(const glm::vec3 &outDir, const HitRecord &hit_record);
 
 }  // namespace sparks

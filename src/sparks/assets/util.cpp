@@ -126,4 +126,13 @@ glm::mat4 XmlComposeTransformMatrix(tinyxml2::XMLElement *object_element) {
   }
   return result;
 }
+
+bool SanityCheck(const glm::vec3 &outDir, const HitRecord &hit_record) {
+  /*
+  Check whether the output direction is outside the surface. 
+  The input `outDir` must be unit vectors! 
+  */
+  return glm::dot(outDir, hit_record.geometry_normal)>1e-3;
+}
+
 }  // namespace sparks

@@ -9,6 +9,14 @@ struct TreeNode {
   AxisAlignedBoundingBox aabb{};
   int child[2]{-1, -1};
 };
+struct BVHNode {
+  AxisAlignedBoundingBox aabb; // AABB
+  std::unique_ptr<BVHNode> left; // left son
+  std::unique_ptr<BVHNode> right; // right son
+  int start; // the beginning index of the nodes under this node
+  int end; // the end index of the nodes under this node
+  BVHNode() : start(-1), end(-1) {}
+};
 }  // namespace
 
 class AcceleratedMesh : public Mesh {
