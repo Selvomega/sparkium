@@ -202,11 +202,18 @@ void Renderer::RayGeneration(int x,
   std::mt19937 xrd(x);
   std::mt19937 yrd(y + std::uniform_int_distribution<int>()(xrd));
   std::mt19937 rd(sample + std::uniform_int_distribution<int>()(yrd));
-  glm::vec2 pos{(float(x) + 0.5f) / float(width_),
-                (float(y) + 0.5f) / float(height_)};
-  glm::vec2 range_low{float(x) / float(width_), float(y) / float(height_)};
-  glm::vec2 range_high{(float(x) + 1.0f) / float(width_),
-                       (float(y) + 1.0f) / float(height_)};
+  std::random_device nrd;
+  std::mt19937 gen(nrd());
+  std::uniform_real_distribution<> dis(0.0, 1.0);
+  float jitterX = dis(gen)-0.5;
+  float jitterY = dis(gen)-0.5;
+  float float_x = float(x)+jitterX;
+  float float_y = float(y)+jitterY;
+  glm::vec2 pos{(float_x + 0.5f) / float(width_),
+                (float_y + 0.5f) / float(height_)};
+  glm::vec2 range_low{float_x / float(width_), float_y / float(height_)};
+  glm::vec2 range_high{(float_x + 1.0f) / float(width_),
+                       (float_y + 1.0f) / float(height_)};
   glm::vec3 origin, direction;
 
   scene_.GetCamera().GenerateRay(

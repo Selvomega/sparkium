@@ -1,4 +1,5 @@
 #include "sparks/assets/aabb.h"
+#include <cmath>
 
 #include "algorithm"
 #include "grassland/grassland.h"
@@ -26,6 +27,27 @@ AxisAlignedBoundingBox::AxisAlignedBoundingBox(const glm::vec3 &position) {
   y_high = position.y;
   z_low = position.z;
   z_high = position.z;
+}
+
+AxisAlignedBoundingBox::AxisAlignedBoundingBox(const std::vector<Vertex> vertices) {
+  assert(vertices.size()%3==0);
+  assert(vertices.size()!=0);
+  x_low = vertices[0].position.x;
+  x_high = vertices[0].position.x;
+  y_low = vertices[0].position.y;
+  y_high = vertices[0].position.y;
+  z_low = vertices[0].position.z;
+  z_high = vertices[0].position.z;
+  vertices_.reserve(vertices.size());
+  for (int i=0; i<vertices.size(); i++) {
+    vertices_.emplace_back(vertices[i]); // Put the vertices into the 
+    x_low = std::min(x_low,vertices[i].position.x);
+    x_high = std::max(x_high,vertices[i].position.x);
+    y_low = std::min(y_low,vertices[i].position.y);
+    y_high = std::max(y_high,vertices[i].position.y);
+    z_low = std::min(z_low,vertices[i].position.z);
+    z_high = std::max(z_high,vertices[i].position.z);
+  }
 }
 
 bool AxisAlignedBoundingBox::IsIntersect(const glm::vec3 &origin,
@@ -65,6 +87,19 @@ bool AxisAlignedBoundingBox::IsIntersect(const glm::vec3 &origin,
   TestIntersection(z, x, y);
   TestIntersection(y, z, x);
   return intersection_range_high >= t_min && intersection_range_low <= t_max;
+}
+
+float AxisAlignedBoundingBox::centroid(int dim) const {
+  /*
+  Return the centeroid of the AABB. 
+  */
+  if (dim==0) {
+    return (x_low+x_high)/2;
+  }
+  else if (dim==1) {
+    return (y_low+y_high)/2;
+  }
+  return (z_low+z_high)/2;
 }
 
 AxisAlignedBoundingBox AxisAlignedBoundingBox::operator&(

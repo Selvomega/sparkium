@@ -2,22 +2,40 @@
 #include "sparks/assets/aabb.h"
 #include "sparks/assets/mesh.h"
 
+#include <vector>
+
 namespace sparks {
 
-namespace {
 struct TreeNode {
   AxisAlignedBoundingBox aabb{};
   int child[2]{-1, -1};
 };
-struct BVHNode {
-  AxisAlignedBoundingBox aabb; // AABB
-  std::unique_ptr<BVHNode> left; // left son
-  std::unique_ptr<BVHNode> right; // right son
-  int start; // the beginning index of the nodes under this node
-  int end; // the end index of the nodes under this node
-  BVHNode() : start(-1), end(-1) {}
+
+class BVHTree {
+  public:
+    struct BVHNode {
+      AxisAlignedBoundingBox aabb; // AABB
+      std::vector<std::pair<const AxisAlignedBoundingBox *,int>> objs; // The list of objects in the BVH node. 
+      std::shared_ptr<BVHNode> left; // left son
+      std::shared_ptr<BVHNode> right; // right son
+    };
+    BVHTree();
+    BVHTree(std::vector<AxisAlignedBoundingBox> &b);
+    bool Intersect(const glm::vec3 &origin,
+                   const glm::vec3 &direction,
+                   float t_min,
+                   std::vector<int> &result) const;
+    AxisAlignedBoundingBox AccessBuf(int index) const;
+  private:
+    void Intersect_r(BVHNode *root,
+                     const glm::vec3 &origin,
+                     const glm::vec3 &direction,
+                     float t_min,
+                     std::vector<int> &result) const;
+    BVHNode *Build(std::vector<std::pair<const AxisAlignedBoundingBox *,int>> &objs, int depth = 0);
+    std::shared_ptr<BVHNode> root;
+	  std::vector<AxisAlignedBoundingBox> buf;
 };
-}  // namespace
 
 class AcceleratedMesh : public Mesh {
  public:
@@ -35,6 +53,6 @@ class AcceleratedMesh : public Mesh {
   /*
    * You can add your acceleration structure contents here.
    * */
-  // TODO 
+  BVHTree tree; 
 };
 }  // namespace sparks
