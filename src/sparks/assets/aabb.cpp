@@ -2,7 +2,9 @@
 #include <cmath>
 
 #include "algorithm"
+#include "glm/fwd.hpp"
 #include "grassland/grassland.h"
+#include "random"
 
 namespace sparks {
 
@@ -136,6 +138,21 @@ AxisAlignedBoundingBox &AxisAlignedBoundingBox::operator|=(
   z_low = std::min(z_low, aabb.z_low);
   z_high = std::max(z_high, aabb.z_high);
   return *this;
+}
+
+glm::vec3 AxisAlignedBoundingBox::Rand() const {
+  /*
+  Randomly choose a point in the bounding box. 
+  */
+  std::random_device nrd;
+  std::mt19937 gen(nrd());
+  std::uniform_real_distribution<> dis(0.0, 1.0);
+  float x_rand = dis(gen);
+  float y_rand = dis(gen);
+  float z_rand = dis(gen);
+  return glm::vec3{(x_high-x_low)*x_rand+x_low,
+                   (y_high-y_low)*y_rand+y_low,
+                   (z_high-z_low)*z_rand+z_low};
 }
 
 }  // namespace sparks

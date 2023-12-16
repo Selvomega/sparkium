@@ -10,5 +10,6 @@ struct HitRecord {
   glm::vec3 tangent{}; 
   glm::vec2 tex_coord{}; // The 2D texture coordination 
   bool front_face{}; // Whether the hit point is at the front face of the object
+  glm::vec3 prev_direction{0.0f,0.0f,0.0f}; // Previous direction. 
 };
 }  // namespace sparks

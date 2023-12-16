@@ -1,4 +1,5 @@
 #pragma once
+#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "iostream"
 #include "sparks/assets/aabb.h"
@@ -20,5 +21,6 @@ class Model {
   [[nodiscard]] virtual std::vector<Vertex> GetVertices() const = 0;
   [[nodiscard]] virtual std::vector<uint32_t> GetIndices() const = 0;
   virtual const char *GetDefaultEntityName();
+  virtual glm::vec3 Random() const = 0;
 };
 }  // namespace sparks

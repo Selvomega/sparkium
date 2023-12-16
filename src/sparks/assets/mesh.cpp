@@ -3,6 +3,7 @@
 #include "fstream"
 #include "iomanip"
 #include "iostream"
+#include "sparks/assets/aabb.h"
 #include "unordered_map"
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -17,6 +18,7 @@ Mesh::Mesh(const std::vector<Vertex> &vertices,
            const std::vector<uint32_t> &indices) {
   vertices_ = vertices;
   indices_ = indices;
+  InitBoundingBox();
 }
 
 Mesh Mesh::Cube(const glm::vec3 &center, const glm::vec3 &size) {
@@ -275,6 +277,7 @@ bool Mesh::LoadObjFile(const std::string &obj_file_path, Mesh &mesh) {
   }
   mesh = Mesh(vertices, indices);
   mesh.MergeVertices();
+  mesh.InitBoundingBox();
   return true;
 }
 
@@ -384,7 +387,20 @@ Mesh::Mesh(const tinyxml2::XMLElement *element) {
       indices_.push_back(i + 2);
     }
     MergeVertices();
+    InitBoundingBox();
   }
+}
+
+glm::vec3 Mesh::Random() const {
+  /*
+  Get a random point inside the AABB. 
+  Notice that the coordination is under the coordination of Model. 
+  */
+  return boundingbox_.Rand();
+}
+
+void Mesh::InitBoundingBox(){
+  boundingbox_ = GetAABB(glm::mat4{1.0f});
 }
 
 }  // namespace sparks

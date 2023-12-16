@@ -81,6 +81,12 @@ glm::vec3 Material::BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const 
     }
     return glm::vec3{0.0f};
   }
+  else if (material_type==MATERIAL_TYPE_EMISSION) {
+    // If the material is emissive.
+    // Dealt like Lambertian material temporarily but without adding albedo color. 
+    // `inDir` is not used here, so it is still fine even if invalid `hit_record.prev_direction` is passed in when explicitly sampling the light. 
+    return emission * emission_strength;
+  }
   else {
     // Other cases
     // TODO

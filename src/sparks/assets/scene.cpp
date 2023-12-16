@@ -213,16 +213,17 @@ float Scene::TraceRay(const glm::vec3 &origin,
   float local_result;
   for (int entity_id = 0; entity_id < entities_.size(); entity_id++) {
     auto &entity = entities_[entity_id];
-    auto &transform = entity.GetTransformMatrix();
+    auto &transform = entity.GetTransformMatrix(); // The matrix from mesh coordination to global coordination. 
     auto inv_transform = glm::inverse(transform);
     auto transformed_direction =
-        glm::vec3{inv_transform * glm::vec4{direction, 0.0f}};
+        glm::vec3{inv_transform * glm::vec4{direction, 0.0f}}; // Transform global direction to mesh direction. 
     auto transformed_direction_length = glm::length(transformed_direction);
     if (transformed_direction_length < 1e-6) {
+      // Prevent divide-by-zero.
       continue;
     }
     local_result = entity.GetModel()->TraceRay(
-        inv_transform * glm::vec4{origin, 1.0f},
+        inv_transform * glm::vec4{origin, 1.0f}, // Transform global origin to mesh origin. 
         transformed_direction / transformed_direction_length, t_min,
         hit_record ? &local_hit_record : nullptr);
     local_result /= transformed_direction_length;

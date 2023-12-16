@@ -1,4 +1,5 @@
 #pragma once
+#include "sparks/assets/aabb.h"
 #include "sparks/assets/model.h"
 #include "sparks/assets/util.h"
 #include "sparks/assets/vertex.h"
@@ -28,9 +29,12 @@ class Mesh : public Model {
   static bool LoadObjFile(const std::string &obj_file_path, Mesh &mesh);
   void WriteObjFile(const std::string &file_path) const;
   void MergeVertices();
+  glm::vec3 Random() const override;
 
- protected:
+ //protected:
   std::vector<Vertex> vertices_;
   std::vector<uint32_t> indices_;
+  AxisAlignedBoundingBox boundingbox_;
+  void InitBoundingBox();
 };
 }  // namespace sparks
