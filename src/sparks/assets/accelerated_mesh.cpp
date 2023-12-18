@@ -136,6 +136,7 @@ float AcceleratedMesh::TraceRay(const glm::vec3 &origin,
                                 const glm::vec3 &direction,
                                 float t_min,
                                 HitRecord *hit_record) const {
+//return Mesh::TraceRay(origin, direction, t_min, hit_record);
 	float ret = -1;
 	std::vector<int> result={};
 	bool not_miss = tree.Intersect(origin, direction, t_min, result);

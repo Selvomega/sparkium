@@ -76,7 +76,7 @@ glm::vec3 Material::BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const 
   // TODO
   if (material_type==MATERIAL_TYPE_LAMBERTIAN) {
     // If the material is Lambertian type. 
-    if (SanityCheck(outDir, hit_record)) {
+    if (SanityCheck(inDir, outDir, hit_record)) {
       return albedo_color * glm::vec3{scene->GetTextures()[albedo_texture_id].Sample(hit_record.tex_coord)} * float(1/M_PI);
     }
     return glm::vec3{0.0f};
@@ -90,7 +90,7 @@ glm::vec3 Material::BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const 
   else {
     // Other cases
     // TODO
-    return glm::vec3{1.0f};
+    return glm::vec3{0.0f};
   }
 }
 
@@ -114,11 +114,12 @@ std::pair<glm::vec3,float> Material::ImportanceSampling(const glm::vec3 &inDir, 
     float x = sin(theta) * cos(phi);
     float y = sin(theta) * sin(phi);
     float z = cos(theta);
-    glm::vec3 w_vec = hit_record.normal;
-    glm::vec3 u_vec = hit_record.tangent;
+    auto hit_record_normal = (glm::dot(hit_record.normal,inDir)<0)? hit_record.normal : -hit_record.normal;
+    glm::vec3 w_vec = hit_record_normal;
+    glm::vec3 u_vec = glm::normalize(glm::vec3{w_vec.y-w_vec.z,w_vec.z-w_vec.x, w_vec.x-w_vec.y});
     glm::vec3 v_vec = glm::cross(w_vec, u_vec);
     ret = glm::normalize(x*u_vec + y*v_vec + z*w_vec);
-    if (SanityCheck(ret, hit_record)) {
+    if (SanityCheck(inDir, ret, hit_record)) {
       return std::make_pair(ret,1/(2*M_PI));
     }
   }

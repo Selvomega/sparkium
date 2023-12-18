@@ -1,5 +1,6 @@
 #include "sparks/renderer/path_tracer.h"
 #include <iostream>
+#include <queue>
 
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
@@ -21,6 +22,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
                                 int sample) const {
   // TODO
   glm::vec3 throughput{1.0f};
+  glm::vec3 prev_throughput{1.0f};
   glm::vec3 radiance{0.0f};
   HitRecord hit_record;
   const int max_bounce = render_settings_->num_bounces;
@@ -30,6 +32,9 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
     for (int i=0; i<scene_->GetEntityCount(); i++) {
       // Sample the light explicitly. 
       // Is it too slow? 
+      if (hit_record.hit_entity_id==-1) {
+        break;
+      }
       if (scene_->GetEntity(i).GetMaterial().material_type==MATERIAL_TYPE_EMISSION && i!=hit_record.hit_entity_id) {
         // If the material is emissive. 
         const Mesh* mesh = dynamic_cast<const Mesh*>(scene_->GetEntity(i).GetModel());
@@ -53,22 +58,10 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
           auto mesh_rand_position = u_rand*v0.position + v_rand*v1.position + w_rand*v2.position;
           glm::vec3 global_rand_position = transform*glm::vec4{mesh_rand_position,1.0};
           glm::vec3 raw_direction = global_rand_position-origin;
-          if (glm::length(raw_direction)<1e-4 || (hit_record.hit_entity_id!=-1 && (glm::dot(raw_direction,hit_record.geometry_normal)<0 || glm::dot(raw_direction,hit_record.normal)<0))) {
+          if (glm::length(raw_direction)<1e-3 || (hit_record.hit_entity_id!=-1 && (glm::dot(raw_direction,hit_record.geometry_normal)<0))) {
             // If the two points are too close. 
             // Or the mesh piece is on the other side of the normal.
-if (hit_record.hit_entity_id!=-1 && !hit_record.front_face) {
-  std::cout<<"Strange entity id: "<<hit_record.hit_entity_id<<std::endl;
-}
-else {
-  std::cout<<"Normal entity id: "<<hit_record.hit_entity_id<<std::endl;
-}
-/*
-std::cout<<"Continue1, entity id: "<<hit_record.hit_entity_id<<std::endl;
-std::cout<<"normal: "<<hit_record.normal.x<<" "<<hit_record.normal.y<<" "<<hit_record.normal.z<<std::endl;
-std::cout<<"raw direction: "<<raw_direction.x<<" "<<raw_direction.y<<" "<<raw_direction.z<<std::endl;
-std::cout<<"position: "<<hit_record.position.x<<" "<<hit_record.position.y<<" "<<hit_record.position.z<<std::endl;
-std::cout<<"origin: "<<origin.x<<" "<<origin.y<<" "<<origin.z<<std::endl;
-*/
+            // You can believe that the geometry normal points to the outside of the object. 
             continue; // Next triangle.
           }
           glm::vec3 global_direction = glm::normalize(raw_direction);
@@ -78,14 +71,11 @@ std::cout<<"origin: "<<origin.x<<" "<<origin.y<<" "<<origin.z<<std::endl;
             // If did not hit the light source. 
             continue; // Next triangle.
           }
-          auto material = scene_->GetEntity(i).GetMaterial();
-          auto cosine1 = glm::dot(global_direction, temp_hit_record.normal); 
-          auto cosine2 = (hit_record.hit_entity_id!=-1) ? glm::dot(-global_direction, hit_record.normal) : 1; 
-          radiance += throughput*material.BRDF(hit_record.prev_direction, global_direction, temp_hit_record, scene_) * cosine1 * cosine2 * glm::length(glm::cross(v1.position-v0.position, v2.position-v0.position)) / (2*length(raw_direction)*length(raw_direction));
-//std::cout<<"direction: "<<global_direction.x<<" "<<global_direction.y<<" "<<global_direction.z<<std::endl;
-//std::cout<<"normal: "<<temp_hit_record.normal.x<<" "<<temp_hit_record.normal.y<<" "<<temp_hit_record.normal.z<<std::endl;
-//std::cout<<cosine1<<" "<<cosine2<<std::endl;
-//std::cout<<"radiance: "<<radiance.x<<" "<<radiance.y<<" "<<radiance.z<<std::endl;
+          auto material = scene_->GetEntity(hit_record.hit_entity_id).GetMaterial();
+          auto light_material = scene_->GetEntity(i).GetMaterial();
+          auto cosine1 = std::abs(glm::dot(global_direction, temp_hit_record.normal)); 
+          auto cosine2 = (hit_record.hit_entity_id!=-1) ? std::abs(glm::dot(global_direction, hit_record.normal)) : 1; 
+          radiance += prev_throughput*light_material.emission*light_material.emission_strength*material.BRDF(hit_record.prev_direction, direction, hit_record, scene_) * cosine1 * cosine2 * glm::length(glm::cross(v1.position-v0.position, v2.position-v0.position)) / (2*glm::length(raw_direction)*glm::length(raw_direction));
         }
       }
     }
@@ -97,14 +87,19 @@ std::cout<<"origin: "<<origin.x<<" "<<origin.y<<" "<<origin.z<<std::endl;
           scene_->GetEntity(hit_record.hit_entity_id).GetMaterial();
       if (material.material_type==MATERIAL_TYPE_EMISSION) {
         // If the material is emissive. 
+        if (j==0) {
+          // If the first radiance
+          radiance += throughput * material.emission * material.emission_strength;
+        }
         break; // Break since we have explicitly sampled the light source. 
       }
       else if (material.material_type==MATERIAL_TYPE_SPECULAR) {
         // If the material is totally specular. 
         origin = hit_record.position;
         hit_record.prev_direction = direction;
+        // The following line is true no matter what is the direction of the normal
         direction = direction - 2*glm::dot(direction,hit_record.normal)*hit_record.normal;
-        if (!SanityCheck(direction, hit_record)) {
+        if (!SanityCheck(hit_record.prev_direction, direction, hit_record)) {
           // If sanity check not passed, 
           // Eliminate the ray? 
           radiance *= 0;
@@ -118,7 +113,9 @@ std::cout<<"origin: "<<origin.x<<" "<<origin.y<<" "<<origin.z<<std::endl;
         auto p = material.ImportanceSampling(direction, hit_record);
         auto out_direction = p.first;
         auto pdf = p.second;
-        auto cosine = glm::dot(out_direction, hit_record.normal); 
+        // This line?
+        auto cosine = std::abs(glm::dot(out_direction, hit_record.normal)); 
+        prev_throughput = throughput;
         throughput *= material.BRDF(direction, out_direction, hit_record, scene_)*cosine/pdf;
         hit_record.prev_direction = direction;
         direction = out_direction;
@@ -142,6 +139,7 @@ std::cout<<"origin: "<<origin.x<<" "<<origin.y<<" "<<origin.z<<std::endl;
         }
         break;
       }
+      /*
       if (j > 3) {
         float p = std::max(throughput.x, std::max(throughput.y, throughput.z));
         std::random_device nrd;
@@ -153,6 +151,7 @@ std::cout<<"origin: "<<origin.x<<" "<<origin.y<<" "<<origin.z<<std::endl;
         }
         throughput *= 1 / p;
       }
+      */
     }
     else {
       // Did not hit any object. 
