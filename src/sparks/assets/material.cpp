@@ -7,7 +7,11 @@
 #include "grassland/grassland.h"
 #include "sparks/assets/scene.h"
 #include "sparks/assets/texture.h"
+#include "sparks/assets/util.h"
 #include "sparks/util/util.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/random.hpp>
 
 namespace sparks {
 
@@ -101,27 +105,9 @@ std::pair<glm::vec3,float> Material::ImportanceSampling(const glm::vec3 &inDir, 
   Return the direction and the pdf value at the direction. 
   */
   // TODO
-  glm::vec3 ret{};
-  for (int i=0; i<3; i++) {
-    // Sample uniformly over the hemisphere. 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0, 1);
-    double u = dis(gen);
-    double v = dis(gen);
-    double theta = acos(sqrt(1.0 - u));
-    double phi = 2 * M_PI * v;
-    float x = sin(theta) * cos(phi);
-    float y = sin(theta) * sin(phi);
-    float z = cos(theta);
-    auto hit_record_normal = (glm::dot(hit_record.normal,inDir)<0)? hit_record.normal : -hit_record.normal;
-    glm::vec3 w_vec = hit_record_normal;
-    glm::vec3 u_vec = glm::normalize(glm::vec3{w_vec.y-w_vec.z,w_vec.z-w_vec.x, w_vec.x-w_vec.y});
-    glm::vec3 v_vec = glm::cross(w_vec, u_vec);
-    ret = glm::normalize(x*u_vec + y*v_vec + z*w_vec);
-    if (SanityCheck(inDir, ret, hit_record)) {
-      return std::make_pair(ret,1/(2*M_PI));
-    }
+  glm::vec3 ret = glm::ballRand(1.0f);
+  if (!SanityCheck(inDir, ret, hit_record)) {
+    ret = -ret;
   }
   return std::make_pair(ret,1/(2*M_PI));
 }

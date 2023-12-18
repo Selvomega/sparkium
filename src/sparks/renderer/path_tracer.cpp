@@ -74,7 +74,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
           auto material = scene_->GetEntity(hit_record.hit_entity_id).GetMaterial();
           auto light_material = scene_->GetEntity(i).GetMaterial();
           auto cosine1 = std::abs(glm::dot(global_direction, temp_hit_record.normal)); 
-          auto cosine2 = (hit_record.hit_entity_id!=-1) ? std::abs(glm::dot(global_direction, hit_record.normal)) : 1; 
+          auto cosine2 = std::abs(glm::dot(global_direction, hit_record.normal)); 
           radiance += prev_throughput*light_material.emission*light_material.emission_strength*material.BRDF(hit_record.prev_direction, direction, hit_record, scene_) * cosine1 * cosine2 * glm::length(glm::cross(v1.position-v0.position, v2.position-v0.position)) / (2*glm::length(raw_direction)*glm::length(raw_direction));
         }
       }
