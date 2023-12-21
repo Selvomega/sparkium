@@ -36,5 +36,8 @@ struct Material {
   [[nodiscard]] std::pair<glm::vec3, float> UniformSampling(
       const glm::vec3 &inDir,
       const HitRecord &hit_record) const;
+    [[nodiscard]] std::pair<glm::vec3, float> CosImportanceSampling(
+      const glm::vec3 &inDir,
+      const HitRecord &hit_record) const;
 };
 }  // namespace sparks

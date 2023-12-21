@@ -113,7 +113,7 @@ return std::make_pair(ret,1/(2*3.14));
 }
 
 
-//std::pair<glm::vec3, float> Material::ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {    float phongExponent = 100; // ¸ù¾Ý²ÄÖÊÊôÐÔÉèÖÃ    glm::vec3 reflectDir = glm::reflect(-inDir, hit_record.normal);    reflectDir = glm::normalize(reflectDir);    glm::vec3 w_vec = reflectDir;    glm::vec3 u_vec = hit_record.tangent;    glm::vec3 v_vec = glm::cross(w_vec, u_vec);    glm::vec3 sampledDir;    float pdf;    for (int i = 0; i < 3; i++) {        // Ê¹ÓÃPhong·Ö²¼Ä£ÐÍ²ÉÑù        std::random_device rd;        std::mt19937 gen(rd());        std::uniform_real_distribution<> dis(0, 1);        double u = dis(gen);        double v = dis(gen);        double theta = std::acos(std::pow(u, 1 / (phongExponent + 1)));        double phi = 2 * M_PI * v;        // ×ª»»µ½¾Ö²¿×ø±êÏµ        float x = std::sin(theta) * std::cos(phi);        float y = std::sin(theta) * std::sin(phi);        float z = std::cos(theta);        sampledDir = glm::normalize(x * u_vec + y * v_vec + z * w_vec);        if (SanityCheck(sampledDir, hit_record)) {            float cosine = std::max(glm::dot(sampledDir, reflectDir), 0.0f);            pdf = (phongExponent + 1) / (2 * M_PI) * std::pow(cosine, phongExponent);            return std::make_pair(sampledDir, pdf);        }    }    // try 3 times at most    float cosine = std::max(glm::dot(sampledDir, reflectDir), 0.0f);    pdf = (phongExponent + 1) / (2 * M_PI) * std::pow(cosine, phongExponent);    return std::make_pair(sampledDir, pdf);}
+//std::pair<glm::vec3, float> Material::ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {    float phongExponent = 100; // ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½    glm::vec3 reflectDir = glm::reflect(-inDir, hit_record.normal);    reflectDir = glm::normalize(reflectDir);    glm::vec3 w_vec = reflectDir;    glm::vec3 u_vec = hit_record.tangent;    glm::vec3 v_vec = glm::cross(w_vec, u_vec);    glm::vec3 sampledDir;    float pdf;    for (int i = 0; i < 3; i++) {        // Ê¹ï¿½ï¿½Phongï¿½Ö²ï¿½Ä£ï¿½Í²ï¿½ï¿½ï¿½        std::random_device rd;        std::mt19937 gen(rd());        std::uniform_real_distribution<> dis(0, 1);        double u = dis(gen);        double v = dis(gen);        double theta = std::acos(std::pow(u, 1 / (phongExponent + 1)));        double phi = 2 * M_PI * v;        // ×ªï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ        float x = std::sin(theta) * std::cos(phi);        float y = std::sin(theta) * std::sin(phi);        float z = std::cos(theta);        sampledDir = glm::normalize(x * u_vec + y * v_vec + z * w_vec);        if (SanityCheck(sampledDir, hit_record)) {            float cosine = std::max(glm::dot(sampledDir, reflectDir), 0.0f);            pdf = (phongExponent + 1) / (2 * M_PI) * std::pow(cosine, phongExponent);            return std::make_pair(sampledDir, pdf);        }    }    // try 3 times at most    float cosine = std::max(glm::dot(sampledDir, reflectDir), 0.0f);    pdf = (phongExponent + 1) / (2 * M_PI) * std::pow(cosine, phongExponent);    return std::make_pair(sampledDir, pdf);}
 
 
 //std::pair<glm::vec3, float> Material::UniformSampling(
@@ -146,7 +146,7 @@ return std::make_pair(ret,1/(2*3.14));
 
 std::pair<glm::vec3, float> Material::ImportanceSampling(
     const glm::vec3 &inDir, const HitRecord &hit_record) const {
-    float phongExponent = 100;  // ¸ù¾Ý²ÄÖÊÊôÐÔÉèÖÃ
+    float phongExponent = 100;  // ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     glm::vec3 reflectDir = glm::reflect(-inDir, hit_record.normal);
     reflectDir = glm::normalize(reflectDir);
     glm::vec3 w_vec = reflectDir;
@@ -155,14 +155,14 @@ std::pair<glm::vec3, float> Material::ImportanceSampling(
     glm::vec3 sampledDir;
     float pdf;
     for (int i = 0; i < 3;
-         i++) {  // Ê¹ÓÃPhong·Ö²¼Ä£ÐÍ²ÉÑù       
+         i++) {  // Ê¹ï¿½ï¿½Phongï¿½Ö²ï¿½Ä£ï¿½Í²ï¿½ï¿½ï¿½       
         std::random_device rd;
       std::mt19937 gen(rd());
       std::uniform_real_distribution<> dis(0, 1);
       double u = dis(gen);
       double v = dis(gen);
       double theta = std::acos(std::pow(u, 1 / (phongExponent + 1)));
-      double phi = 2 * 3.14 * v;  // ×ª»»µ½¾Ö²¿×ø±êÏµ       
+      double phi = 2 * 3.14 * v;  // ×ªï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ       
       float x = std::sin(theta) * std::cos(phi);
       float y = std::sin(theta) * std::sin(phi);
       float z = std::cos(theta);
@@ -178,6 +178,24 @@ std::pair<glm::vec3, float> Material::ImportanceSampling(
     pdf = (phongExponent + 1) / (2 * 3.14) * std::pow(cosine, phongExponent);
     return std::make_pair(sampledDir, pdf);
   }
+
+std::pair<glm::vec3, float> Material::CosImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {
+  float theta, phi, rand1, rand2;
+  rand1 = fract(RandomFloat());
+  rand2 = fract(RandomFloat());
+
+  theta = acos(sqrt(1-rand1));
+  phi = 2*PI*rand2;
+
+  vec3 out_direction;
+
+  vec3 local_z = normalize(hit_record.normal);
+  vec3 local_x = normalize(direction - dot(direction, local_z) * local_z);
+  vec3 local_y = cross(local_z,local_x);
+
+  out_direction = normalize(sin(theta)*cos(phi)*local_x + sin(theta)*sin(phi)*local_y + cos(theta)*local_z);
+  return std::make_pair(out_direction, cos(theta)/3.14);
+}
 std::pair<glm::vec3, float> Material::MultiImportanceSampling(
     const glm::vec3 &inDir,
     const HitRecord &hit_record) const { 
