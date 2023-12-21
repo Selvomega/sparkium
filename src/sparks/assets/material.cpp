@@ -81,7 +81,7 @@ glm::vec3 Material::BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const 
   if (material_type==MATERIAL_TYPE_LAMBERTIAN) {
     // If the material is Lambertian type. 
     if (SanityCheck(inDir, outDir, hit_record)) {
-      return albedo_color * glm::vec3{scene->GetTextures()[albedo_texture_id].Sample(hit_record.tex_coord)} * float(1/M_PI);
+      return albedo_color * glm::vec3{scene->GetTextures()[albedo_texture_id].Sample(hit_record.tex_coord)} * float(1/3.14);
     }
     return glm::vec3{0.0f};
   }
@@ -98,7 +98,7 @@ glm::vec3 Material::BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const 
   }
 }
 
-std::pair<glm::vec3,float> Material::ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {
+std::pair<glm::vec3,float> Material::UniformSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {
   /*
   Sample a random direction in the hemisphere currently. 
   Do sanity check for 3 times. 
@@ -107,9 +107,95 @@ std::pair<glm::vec3,float> Material::ImportanceSampling(const glm::vec3 &inDir, 
   // TODO
   glm::vec3 ret = glm::ballRand(1.0f);
   if (!SanityCheck(inDir, ret, hit_record)) {
-    ret = -ret;
+   ret = -ret;
   }
-  return std::make_pair(ret,1/(2*M_PI));
+return std::make_pair(ret,1/(2*3.14));
+}
+
+
+//std::pair<glm::vec3, float> Material::ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {    float phongExponent = 100; // 根据材质属性设置    glm::vec3 reflectDir = glm::reflect(-inDir, hit_record.normal);    reflectDir = glm::normalize(reflectDir);    glm::vec3 w_vec = reflectDir;    glm::vec3 u_vec = hit_record.tangent;    glm::vec3 v_vec = glm::cross(w_vec, u_vec);    glm::vec3 sampledDir;    float pdf;    for (int i = 0; i < 3; i++) {        // 使用Phong分布模型采样        std::random_device rd;        std::mt19937 gen(rd());        std::uniform_real_distribution<> dis(0, 1);        double u = dis(gen);        double v = dis(gen);        double theta = std::acos(std::pow(u, 1 / (phongExponent + 1)));        double phi = 2 * M_PI * v;        // 转换到局部坐标系        float x = std::sin(theta) * std::cos(phi);        float y = std::sin(theta) * std::sin(phi);        float z = std::cos(theta);        sampledDir = glm::normalize(x * u_vec + y * v_vec + z * w_vec);        if (SanityCheck(sampledDir, hit_record)) {            float cosine = std::max(glm::dot(sampledDir, reflectDir), 0.0f);            pdf = (phongExponent + 1) / (2 * M_PI) * std::pow(cosine, phongExponent);            return std::make_pair(sampledDir, pdf);        }    }    // try 3 times at most    float cosine = std::max(glm::dot(sampledDir, reflectDir), 0.0f);    pdf = (phongExponent + 1) / (2 * M_PI) * std::pow(cosine, phongExponent);    return std::make_pair(sampledDir, pdf);}
+
+
+//std::pair<glm::vec3, float> Material::UniformSampling(
+//    const glm::vec3 &inDir,
+//    const HitRecord &hit_record) const {
+//    glm::vec3 ret{};
+//  for (int i = 0; i< 3; i++) {
+//    // Sample uniformly over the hemisphere.
+//    std::random_device rd;
+//    std::mt19937 gen(rd());
+//    std::uniform_real_distribution<> dis(0, 1);
+//    double u = dis(gen);
+//    double v = dis(gen);
+//    double theta = acos(sqrt(1.0 - u));
+//    double phi = 2 *3.14 * v;
+//    float x = sin(theta) * cos(phi);
+//    float y = sin(theta) * sin(phi);
+//    float z = cos(theta);
+//    glm::vec3 w_vec = hit_record.normal;
+//    glm::vec3 u_vec = hit_record.tangent;
+//    glm::vec3 v_vec = glm::cross(w_vec, u_vec);
+//    ret = glm::normalize(x* u_vec + y* v_vec + z* w_vec);
+//    if (SanityCheck(inDir, ret, hit_record)) {
+//      return std::make_pair(ret, 1 / (2* 3.14));
+//    }
+//  }
+//  return std::make_pair(ret, 1 / (2* 3.14));
+//}
+
+
+std::pair<glm::vec3, float> Material::ImportanceSampling(
+    const glm::vec3 &inDir, const HitRecord &hit_record) const {
+    float phongExponent = 100;  // 根据材质属性设置
+    glm::vec3 reflectDir = glm::reflect(-inDir, hit_record.normal);
+    reflectDir = glm::normalize(reflectDir);
+    glm::vec3 w_vec = reflectDir;
+    glm::vec3 u_vec = hit_record.tangent;
+    glm::vec3 v_vec = glm::cross(w_vec, u_vec);
+    glm::vec3 sampledDir;
+    float pdf;
+    for (int i = 0; i < 3;
+         i++) {  // 使用Phong分布模型采样       
+        std::random_device rd;
+      std::mt19937 gen(rd());
+      std::uniform_real_distribution<> dis(0, 1);
+      double u = dis(gen);
+      double v = dis(gen);
+      double theta = std::acos(std::pow(u, 1 / (phongExponent + 1)));
+      double phi = 2 * 3.14 * v;  // 转换到局部坐标系       
+      float x = std::sin(theta) * std::cos(phi);
+      float y = std::sin(theta) * std::sin(phi);
+      float z = std::cos(theta);
+      sampledDir = glm::normalize(x * u_vec + y * v_vec + z * w_vec);
+      if (SanityCheck(inDir, sampledDir, hit_record)) {
+        float cosine = std::max(glm::dot(sampledDir, reflectDir), 0.0f);
+        pdf =
+            (phongExponent + 1) / (2 * 3.14) * std::pow(cosine, phongExponent);
+        return std::make_pair(sampledDir, pdf);
+      }
+    }  // try 3 times at most
+    float cosine = std::max(glm::dot(sampledDir, reflectDir), 0.0f);
+    pdf = (phongExponent + 1) / (2 * 3.14) * std::pow(cosine, phongExponent);
+    return std::make_pair(sampledDir, pdf);
+  }
+std::pair<glm::vec3, float> Material::MultiImportanceSampling(
+    const glm::vec3 &inDir,
+    const HitRecord &hit_record) const { 
+    // TODO
+  float phongExponent = 100;
+  float weightPhong = 0.5;
+  float weightUniform = 0.5;
+  glm::vec3 sampleDirPhong, sampleDirUniform;
+  float pdfPhong, pdfUniform;
+  std::tie(sampleDirPhong, pdfPhong) = ImportanceSampling(inDir, hit_record);
+  std::tie(sampleDirUniform, pdfUniform) = UniformSampling(inDir, hit_record);
+  float weightSum = weightPhong * pdfPhong + weightUniform * pdfUniform;
+  glm::vec3 combinedDir = (weightPhong * pdfPhong * sampleDirPhong +
+                           weightUniform * pdfUniform * sampleDirUniform) /
+                          weightSum;
+  float combinedPdf =
+      (pdfPhong * weightPhong + pdfUniform * weightUniform) / weightSum;
+  return std::make_pair(combinedDir, combinedPdf);
 }
 
 }  // namespace sparks
