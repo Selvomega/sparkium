@@ -29,6 +29,9 @@ struct Material {
   Material(Scene *scene, const tinyxml2::XMLElement *material_element);
 
   [[nodiscard]] glm::vec3 BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const HitRecord &hit_record, const Scene* scene) const;
+  [[nodiscard]] std::pair<glm::vec3,float> UniformSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
   [[nodiscard]] std::pair<glm::vec3,float> ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
+  [[nodiscard]] std::pair<glm::vec3,float> CosImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
+  [[nodiscard]] std::pair<glm::vec3,float> MultiImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
 };
 }  // namespace sparks

@@ -110,7 +110,8 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
       else if (material.material_type==MATERIAL_TYPE_LAMBERTIAN) {
         // Lambertian material 
         origin = hit_record.position;
-        auto p = material.ImportanceSampling(direction, hit_record);
+        // auto p = material.CosImportanceSampling(direction, hit_record);
+        auto p = material.MultiImportanceSampling(direction, hit_record);
         auto out_direction = p.first;
         auto pdf = p.second;
         // This line?
