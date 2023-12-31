@@ -8,6 +8,7 @@ struct HitRecord {
   glm::vec3 normal{}; // The normal after normal mapping or other processing
   glm::vec3 geometry_normal{}; // The normal in the model rather than "story"
   glm::vec3 tangent{}; 
+  glm::vec3 textured_normal{}; // The textured normal
   glm::vec2 tex_coord{}; // The 2D texture coordination 
   bool front_face{}; // Whether the hit point is at the front face of the object
   glm::vec3 prev_direction{0.0f,0.0f,0.0f}; // Previous direction. 

@@ -10,9 +10,6 @@
 #include "sparks/assets/util.h"
 #include "sparks/util/util.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/random.hpp>
-
 namespace sparks {
 
 namespace {
@@ -44,6 +41,16 @@ Material::Material(Scene *scene, const tinyxml2::XMLElement *material_element)
     if (Texture::Load(path, albedo_texture)) {
       albedo_texture_id =
           scene->AddTexture(albedo_texture, PathToFilename(path));
+    }
+  }
+
+  child_element = material_element->FirstChildElement("normal_texture");
+  if (child_element) {
+    std::string path = child_element->FindAttribute("value")->Value();
+    Texture normal_texture(1, 1);
+    if (Texture::Load(path, normal_texture)) {
+      normal_texture_id =
+          scene->AddTexture(normal_texture, PathToFilename(path));
     }
   }
 
@@ -80,7 +87,7 @@ glm::vec3 Material::BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const 
   // TODO
   if (material_type==MATERIAL_TYPE_LAMBERTIAN) {
     // If the material is Lambertian type. 
-    if (SanityCheck(inDir, outDir, hit_record)) {
+    if (SameSideCheck(inDir, outDir, hit_record)) {
       return albedo_color * glm::vec3{scene->GetTextures()[albedo_texture_id].Sample(hit_record.tex_coord)} * float(1/M_PI);
     }
     return glm::vec3{0.0f};
@@ -91,25 +98,26 @@ glm::vec3 Material::BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const 
     // `inDir` is not used here, so it is still fine even if invalid `hit_record.prev_direction` is passed in when explicitly sampling the light. 
     return emission * emission_strength;
   }
+  else if (material_type==MATERIAL_TYPE_SPECULAR) {
+    // If the material is specular.
+    auto expected_out_dir = inDir - 2*glm::dot(inDir,hit_record.textured_normal)*hit_record.textured_normal;
+    if (glm::dot(expected_out_dir,outDir)<1-(1e-3)) {
+      // If the output direction is too different from the expected replected direction. 
+      return glm::vec3{0.0f};
+    }
+    if (!SameSideCheck(inDir, outDir, hit_record)) {
+      return glm::vec3{0.0f};
+    }
+    return glm::vec3{1.0f};
+  }
+  else if (material_type==MATERIAL_TYPE_TRANSMISSIVE) {
+    return glm::vec3{0.0f};
+  }
   else {
     // Other cases
     // TODO
     return glm::vec3{0.0f};
   }
-}
-
-std::pair<glm::vec3,float> Material::ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {
-  /*
-  Sample a random direction in the hemisphere currently. 
-  Do sanity check for 3 times. 
-  Return the direction and the pdf value at the direction. 
-  */
-  // TODO
-  glm::vec3 ret = glm::ballRand(1.0f);
-  if (!SanityCheck(inDir, ret, hit_record)) {
-    ret = -ret;
-  }
-  return std::make_pair(ret,1/(2*M_PI));
 }
 
 }  // namespace sparks

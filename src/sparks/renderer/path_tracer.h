@@ -19,6 +19,8 @@ class PathTracer {
                                     int y,
                                     int sample) const;
 
+  [[nodiscard]] static std::pair<glm::vec3,float> RandomSampling(const glm::vec3 &inDir, const HitRecord &hit_record);
+
  private:
   const RendererSettings *render_settings_{};
   const Scene *scene_{};
