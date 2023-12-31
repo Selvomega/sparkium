@@ -2,12 +2,12 @@
 <scene>
     <camera>
         <transform type="lookat">
-            <eye value="151 69 0"/>
-            <center value="-274 69 0"/>
+            <eye value="5.5 2.5 0"/>
+            <center value="-10 2.5 0"/>
             <up value="0.0 1.0 0.0"/>
         </transform>
         <fov value="75"/>
-        <speed value="27"/>
+        <speed value="1"/>
     </camera>
 
     <model type="obj" name="Large Plane">
@@ -85,7 +85,7 @@
         <filename value="../../meshes/creeper.obj"/>
         <transform type="world">
             <scale value="1.0 1.0 1.0"/>
-            <translation value="9 0 -36.7"/>
+            <translation value="0.333 0 -1.36"/>
             <rotation value="0 -40 0"/>
         </transform>
 
