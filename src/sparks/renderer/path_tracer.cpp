@@ -30,6 +30,17 @@ PathTracer::PathTracer(const RendererSettings *render_settings,
                        const Scene *scene) {
   render_settings_ = render_settings;
   scene_ = scene;
+  for (int i=0; i<scene_->GetEntityCount(); i++) {
+    entered_.push_back(false);
+  }
+}
+
+bool PathTracer::GetEntered(int index) {
+  return entered_[index];
+}
+
+void PathTracer::SetEntered(int index, bool value) {
+  entered_[index] = value;
 }
 
 std::pair<glm::vec3,float> PathTracer::RandomSampling(const glm::vec3 &inDir, const HitRecord &hit_record) {
@@ -145,7 +156,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
                                 glm::vec3 direction,
                                 int x,
                                 int y,
-                                int sample) const {
+                                int sample) {
   // TODO
   glm::vec3 throughput{1.0f};
   glm::vec3 prev_throughput{1.0f};
@@ -286,10 +297,10 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         direction = out_direction;
       }
       else if (material.material_type==MATERIAL_TYPE_TRANSMISSIVE) {
-        float eta = 1.5; // Hand-written eta value (sin(i)/sin(o))
+        float eta = 1.8; // Hand-written eta value (sin(i)/sin(o))
         origin = hit_record.position;
         hit_record.prev_direction = direction;
-        if (hit_record.front_face) {
+        if (!GetEntered(hit_record.hit_entity_id)) {
           // If the light shoots at the front face of the material. 
           prev_throughput = throughput;
           throughput *= material.albedo_color;
@@ -307,10 +318,10 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
               radiance *= 0;
               break;
             }
-            continue;
           }
           else {
             // The light should be refracted. 
+            SetEntered(hit_record.hit_entity_id,true);
             float sin_i = glm::length(glm::cross(direction, hit_record.textured_normal));
             float sin_o = sin_i/eta;
             float cos_o = sqrt(1-sin_o*sin_o);
@@ -323,7 +334,6 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
               radiance *= 0;
               break;
             }
-            continue;
           }
         }
         else {
@@ -344,10 +354,10 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
               radiance *= 0;
               break;
             }
-            continue;
           }
           else {
             // The light should be refracted. 
+            SetEntered(hit_record.hit_entity_id,false);
             float cos_o = sqrt(1-sin_o*sin_o);
             glm::vec3 norm_dir = (glm::dot(direction,hit_record.textured_normal)<0) ? -hit_record.textured_normal : hit_record.textured_normal;
             glm::vec3 tang_dir = glm::normalize(direction-hit_record.textured_normal*glm::dot(direction,hit_record.textured_normal));
@@ -358,7 +368,6 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
               radiance *= 0;
               break;
             }
-            continue;
           }
         }
       }
@@ -400,6 +409,9 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
       radiance += throughput * glm::vec3{scene_->SampleEnvmap(direction)};
       break;
     }
+  }
+  for (int i=0; i<scene_->GetEntityCount(); i++) {
+    SetEntered(i,false);
   }
   return radiance;
 }

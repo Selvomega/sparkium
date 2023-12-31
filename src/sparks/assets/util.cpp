@@ -132,7 +132,7 @@ bool SameSideCheck(const glm::vec3 &inDir, const glm::vec3 &outDir, const HitRec
   Check whether the output direction is outside the surface. 
   The input `outDir` must be unit vectors! 
   */
-  return glm::dot(-inDir, hit_record.geometry_normal)*glm::dot(outDir, hit_record.geometry_normal)>1e-5;
+  return glm::dot(-inDir, hit_record.geometry_normal)*glm::dot(outDir, hit_record.geometry_normal)>1e-6;
 }
 
 }  // namespace sparks

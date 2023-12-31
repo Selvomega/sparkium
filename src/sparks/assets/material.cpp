@@ -187,7 +187,8 @@ glm::vec3 Material::ctBRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, cons
       // Combine diffuse and specular
       float max_specular = glm::max(specular[0], glm::max(specular[1], specular[2]));
       // specular = specular / max_specular;
-      specular = specular * 2.0f;
+      specular = specular * 1.0f;
+      specular = glm::min(specular,glm::vec3{1.0});
       return specular; 
     }
     return glm::vec3{0.0f};
