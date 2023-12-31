@@ -93,7 +93,7 @@
             <albedo value="1 1 1"/>
             <albedo_texture value="../../textures/CreeperTexture.jpg"/>
             <emission value="1.0 1.0 1.0"/>
-            <emission_strength value="40.0"/>
+            <emission_strength value="30.0"/>
         </material>
     </model>
 
@@ -150,7 +150,7 @@
         </transform>
 
         <material type="transmissive">
-            <albedo value="0.7 0.5 1"/>
+            <albedo value="1 1 1"/>
 			<normal_texture value="../../textures/GuanyuNormal.jpg"/>
         </material>
     </model>
