@@ -19,7 +19,7 @@
         </transform>
 
         <material type="lambertian">
-            <albedo value="0.4 0.8 0.4"/>
+            <albedo value="0.8 1 0.7"/>
         </material>
     </model>
 
@@ -69,8 +69,8 @@
     <model type="obj" name="Gandalf">
         <filename value="../../meshes/gandalf.obj"/>
         <transform type="world">
-            <scale value="1.0 1.0 1.0"/>
-            <translation value="0 0 0"/>
+            <scale value="0.8 0.8 0.8"/>
+            <translation value="0 0 -0.2"/>
             <rotation value="0 0 0"/>
         </transform>
 
@@ -85,28 +85,30 @@
         <filename value="../../meshes/creeper.obj"/>
         <transform type="world">
             <scale value="1.0 1.0 1.0"/>
-            <translation value="0.333 0 -1.36"/>
-            <rotation value="0 -40 0"/>
+            <translation value="2.7 0 1.5"/>
+            <rotation value="-180 50 -180"/>
         </transform>
 
         <material type="emission">
+            <albedo value="1 1 1"/>
+            <albedo_texture value="../../textures/CreeperTexture.jpg"/>
             <emission value="1.0 1.0 1.0"/>
-            <emission_strength value="30.0"/>
+            <emission_strength value="40.0"/>
         </material>
     </model>
 
     <model type="obj" name="Jesus">
         <filename value="../../meshes/jesus.obj"/>
         <transform type="world">
-            <scale value="1.0 1.0 1.0"/>
-            <translation value="0 0 0"/>
+            <scale value="0.8 0.8 0.8"/>
+            <translation value="0 0 0.3"/>
             <rotation value="0 0 0"/>
         </transform>
 
         <material type="lambertian">
             <albedo value="1 1 1"/>
             <albedo_texture value="../../textures/JesusTexture.jpg"/>
-			<normal_texture value="../../textures/JesusNormal.jpg"/>
+            <albedo_texture value="../../textures/JesusNormal.jpg"/>
         </material>
     </model>
 
@@ -119,8 +121,7 @@
         </transform>
 
         <material type="lambertian">
-            <albedo value="1 1 1"/>
-            <albedo_texture value="../../textures/TRexTexture.jpg"/>
+            <albedo value="0.83 0.69 0.22"/>
 			<normal_texture value="../../textures/TRexNormal.jpg"/>
         </material>
     </model>
@@ -143,13 +144,13 @@
     <model type="obj" name="Guanyu">
         <filename value="../../meshes/guanyu.obj"/>
         <transform type="world">
-            <scale value="1.0 1.0 1.0"/>
+            <scale value="0.75 0.75 0.75"/>
             <translation value="0 0 0"/>
             <rotation value="0 0 0"/>
         </transform>
 
-        <material type="lambertian">
-            <albedo value="1 0.84 0"/>
+        <material type="transmissive">
+            <albedo value="0.7 0.5 1"/>
 			<normal_texture value="../../textures/GuanyuNormal.jpg"/>
         </material>
     </model>

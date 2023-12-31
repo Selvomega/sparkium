@@ -94,7 +94,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
           auto light_material = scene_->GetEntity(i).GetMaterial();
           auto cosine1 = std::abs(glm::dot(global_direction, temp_hit_record.textured_normal)); 
           auto cosine2 = std::abs(glm::dot(global_direction, hit_record.textured_normal)); 
-          radiance += prev_throughput*light_material.emission*light_material.emission_strength*material.BRDF(hit_record.prev_direction, direction, hit_record, scene_) * cosine1 * cosine2 * glm::length(glm::cross(v1.position-v0.position, v2.position-v0.position)) / (2*glm::length(raw_direction)*glm::length(raw_direction));
+          radiance += prev_throughput * light_material.albedo_color * glm::vec3{scene_->GetTextures()[light_material.albedo_texture_id].Sample(temp_hit_record.tex_coord)} * light_material.emission * light_material.emission_strength * material.BRDF(hit_record.prev_direction, direction, hit_record, scene_) * cosine1 * cosine2 * glm::length(glm::cross(v1.position-v0.position, v2.position-v0.position)) / (2*glm::length(raw_direction)*glm::length(raw_direction));
         }
       }
     }
@@ -108,7 +108,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         // If the material is emissive. 
         if (j==0) {
           // If the first radiance
-          radiance += throughput * material.emission * material.emission_strength;
+          radiance += throughput * material.emission * material.emission_strength * material.albedo_color * glm::vec3{scene_->GetTextures()[material.albedo_texture_id].Sample(hit_record.tex_coord)};
         }
         break; // Break since we have explicitly sampled the light source. 
       }
