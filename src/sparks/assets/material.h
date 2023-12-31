@@ -11,7 +11,9 @@ enum MaterialType : int {
   MATERIAL_TYPE_SPECULAR = 1, // Total reflect
   MATERIAL_TYPE_TRANSMISSIVE = 2, // Lights can go through
   MATERIAL_TYPE_PRINCIPLED = 3,
-  MATERIAL_TYPE_EMISSION = 4
+  MATERIAL_TYPE_EMISSION = 4,
+  MATERIAL_TYPE_METALLIC = 5,
+  MATERIAL_TYPE_DIELECTRIC_GLOSSY = 6,
 };
 
 class Scene;
@@ -29,6 +31,7 @@ struct Material {
   Material(Scene *scene, const tinyxml2::XMLElement *material_element);
 
   [[nodiscard]] glm::vec3 BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const HitRecord &hit_record, const Scene* scene) const;
+  [[nodiscard]] glm::vec3 ctBRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const HitRecord &hit_record, const Scene* scene) const;
   [[nodiscard]] std::pair<glm::vec3,float> UniformSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
   [[nodiscard]] std::pair<glm::vec3,float> ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
   [[nodiscard]] std::pair<glm::vec3,float> CosImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;

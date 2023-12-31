@@ -177,7 +177,10 @@
         <index value="18"/>
         <index value="19"/>
 
-        <material type="lambertian">
+        <!-- <material type="lambertian">
+            <albedo value="1 1 1"/>
+        </material> -->
+        <material type="glossy">
             <albedo value="1 1 1"/>
         </material>
     </model>
@@ -240,7 +243,7 @@
         <index value="18"/>
         <index value="19"/>
 
-        <material type="lambertian">
+        <material type="metallic">
             <albedo value="1 1 1"/>
         </material>
     </model>

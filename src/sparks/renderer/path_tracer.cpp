@@ -75,7 +75,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
           auto light_material = scene_->GetEntity(i).GetMaterial();
           auto cosine1 = std::abs(glm::dot(global_direction, temp_hit_record.normal)); 
           auto cosine2 = std::abs(glm::dot(global_direction, hit_record.normal)); 
-          radiance += prev_throughput*light_material.emission*light_material.emission_strength*material.BRDF(hit_record.prev_direction, direction, hit_record, scene_) * cosine1 * cosine2 * glm::length(glm::cross(v1.position-v0.position, v2.position-v0.position)) / (2*glm::length(raw_direction)*glm::length(raw_direction));
+          radiance += prev_throughput*light_material.emission*light_material.emission_strength*material.ctBRDF(hit_record.prev_direction, direction, hit_record, scene_) * cosine1 * cosine2 * glm::length(glm::cross(v1.position-v0.position, v2.position-v0.position)) / (2*glm::length(raw_direction)*glm::length(raw_direction));
         }
       }
     }
@@ -117,10 +117,65 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         // This line?
         auto cosine = std::abs(glm::dot(out_direction, hit_record.normal)); 
         prev_throughput = throughput;
-        throughput *= material.BRDF(direction, out_direction, hit_record, scene_)*cosine/pdf;
+        throughput *= material.ctBRDF(direction, out_direction, hit_record, scene_)*cosine/pdf;
         hit_record.prev_direction = direction;
         direction = out_direction;
       }
+      else if (material.material_type==MATERIAL_TYPE_METALLIC) {
+        origin = hit_record.position;
+        // auto p = material.CosImportanceSampling(direction, hit_record);
+        auto p = material.MultiImportanceSampling(direction, hit_record);
+        auto out_direction = p.first;
+        auto pdf = p.second;
+        // This line?
+        auto cosine = std::abs(glm::dot(out_direction, hit_record.normal)); 
+        prev_throughput = throughput;
+        throughput *= material.ctBRDF(direction, out_direction, hit_record, scene_)*cosine/pdf;
+        hit_record.prev_direction = direction;
+        direction = out_direction;
+      }
+      else if (material.material_type==MATERIAL_TYPE_DIELECTRIC_GLOSSY) {
+        origin = hit_record.position;
+        // auto p = material.CosImportanceSampling(direction, hit_record);
+        auto p = material.MultiImportanceSampling(direction, hit_record);
+        auto out_direction = p.first;
+        auto pdf = p.second;
+        // This line?
+        auto cosine = std::abs(glm::dot(out_direction, hit_record.normal)); 
+        prev_throughput = throughput;
+        throughput *= material.ctBRDF(direction, out_direction, hit_record, scene_)*cosine/pdf;
+        hit_record.prev_direction = direction;
+        direction = out_direction;
+      }
+      else if (material.material_type == MATERIAL_TYPE_TRANSMISSIVE) {
+        // Transmissive material
+        origin = hit_record.position;
+
+        // float eta = material.is_inside ? material.refractive_index : 1.0f / material.refractive_index;
+        float eta = 1.0f;
+
+        glm::vec3 unit_direction = glm::normalize(direction);
+        float cos_theta = glm::min(glm::dot(-unit_direction, hit_record.normal), 1.0f);
+        float sin_theta = glm::sqrt(1.0f - cos_theta * cos_theta);
+
+        bool cannot_refract = eta * sin_theta > 1.0f;
+        glm::vec3 refracted_direction;
+
+        // if (cannot_refract) {
+        //   // Total internal reflection
+        //   refracted_direction = glm::reflect(unit_direction, hit_record.normal);
+        // } else {
+        //   // Snell's law refraction
+        //   refracted_direction = glm::refract(unit_direction, hit_record.normal, eta);
+        // }
+        refracted_direction = glm::refract(unit_direction, hit_record.normal, eta);
+        hit_record.prev_direction = direction;
+        direction = refracted_direction;
+        prev_throughput = throughput;
+        throughput *= material.albedo_color; // Assuming `transmittance` represents the attenuation of the light as it passes through the material
+      }
+
+
       else {
         // The other cases. 
         // TODO

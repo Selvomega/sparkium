@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scene>
+    <camera>
+        <transform type="lookat">
+            <eye value="278 273 -800"/>
+            <center value="278 273 0"/>
+            <up value="0.0 1.0 0.0"/>
+        </transform>
+        <fov value="40"/>
+        <speed value="100"/>
+    </camera>
+
+    <!--Light-->
+    <model name="Light">
+        <vertex position="343.0 548.7 227.0"/>
+        <vertex position="343.0 548.7 332.0"/>
+        <vertex position="213.0 548.7 332.0"/>
+        <vertex position="213.0 548.7 227.0"/>
+        <index value="0"/>
+        <index value="3"/>
+        <index value="1"/>
+        <index value="1"/>
+        <index value="2"/>
+        <index value="3"/>
+
+        <material type="emission">
+            <emission value="1.0 1.0 1.0"/>
+            <emission_strength value="20.0"/>
+        </material>
+    </model>
+
+    <!--floor-->
+    <model name="Floor">
+        <vertex position="552.8 0.0   0.0"/>
+        <vertex position="0.0 0.0   0.0"/>
+        <vertex position="0.0 0.0 559.2"/>
+        <vertex position="549.6 0.0 559.2"/>
+        <index value="0"/>
+        <index value="3"/>
+        <index value="1"/>
+        <index value="1"/>
+        <index value="2"/>
+        <index value="3"/>
+
+        <material type="lambertian">
+            <albedo value="0.8 0.8 0.8"/>
+        </material>
+    </model>
+
+    <!--ceiling-->
+    <model name="Ceiling">
+        <vertex position="556.0 548.8 0.0  "/>
+        <vertex position="556.0 548.8 559.2"/>
+        <vertex position="0.0 548.8 559.2"/>
+        <vertex position="0.0 548.8   0.0"/>
+        <index value="0"/>
+        <index value="3"/>
+        <index value="1"/>
+        <index value="1"/>
+        <index value="2"/>
+        <index value="3"/>
+
+        <material type="lambertian">
+            <albedo value="0.8 0.8 0.8"/>
+        </material>
+    </model>
+
+    <!--back wall-->
+    <model name="Back Wall">
+        <vertex position="549.6   0.0 559.2"/>
+        <vertex position="0.0   0.0 559.2"/>
+        <vertex position="0.0 548.8 559.2"/>
+        <vertex position="556.0 548.8 559.2"/>
+        <index value="0"/>
+        <index value="3"/>
+        <index value="1"/>
+        <index value="1"/>
+        <index value="2"/>
+        <index value="3"/>
+
+        <material type="lambertian">
+            <albedo value="0.8 0.8 0.8"/>
+        </material>
+    </model>
+
+    <!--right wall-->
+    <model name="Right Wall">
+        <vertex position="0.0   0.0 559.2 "/>
+        <vertex position="0.0   0.0   0.0"/>
+        <vertex position="0.0 548.8   0.0"/>
+        <vertex position="0.0 548.8 559.2"/>
+        <index value="0"/>
+        <index value="3"/>
+        <index value="1"/>
+        <index value="1"/>
+        <index value="2"/>
+        <index value="3"/>
+
+        <material type="lambertian">
+            <albedo value="0.0 0.8 0.0"/>
+        </material>
+    </model>
+
+    <!--left wall-->
+    <model name="Left Wall">
+        <vertex position="552.8   0.0   0.0 "/>
+        <vertex position="549.6   0.0 559.2"/>
+        <vertex position="556.0 548.8 559.2"/>
+        <vertex position="556.0 548.8   0.0"/>
+        <index value="0"/>
+        <index value="3"/>
+        <index value="1"/>
+        <index value="1"/>
+        <index value="2"/>
+        <index value="3"/>
+
+        <material type="lambertian">
+            <albedo value="0.8 0.0 0.0"/>
+        </material>
+    </model>
+
+    <model type="sphere">
+		<center value="300.0 200.0 500.0"/>
+		<radius value="100"/>
+
+		<!-- <transform type="translate" value="0.0 0.5 0.0"/> -->
+
+		<material type="metallic">
+			<albedo value="0.83 0.69 0.22"/>
+            <!-- <albedo value="0.73 0.43 0.25"/> -->
+			<!-- <albedo_texture value="../../textures/earth.jpg"/> -->
+		</material>
+	</model>
+
+</scene>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scene>
+	<camera>
+		<transform type="lookat">
+			<eye value="20.0 10.0 30.0"/>
+			<center value="0.0 0.0 0.0"/>
+			<up value="0.0 1.0 0.0"/>
+		</transform>
+	</camera>
+
+	<model type="obj">
+		<filename value="../../meshes/guanyu.obj"/>
+
+		<material type="metallic">
+			<albedo value="1.0 0.84 0.0"/>
+		</material>
+	</model>
+
+	<model name="Light">
+        <vertex position="343.0 548.7 227.0"/>
+        <vertex position="343.0 548.7 332.0"/>
+        <vertex position="213.0 548.7 332.0"/>
+        <vertex position="213.0 548.7 227.0"/>
+        <index value="0"/>
+        <index value="3"/>
+        <index value="1"/>
+        <index value="1"/>
+        <index value="2"/>
+        <index value="3"/>
+
+        <material type="emission">
+            <emission value="1.0 1.0 1.0"/>
+            <emission_strength value="30.0"/>
+        </material>
+    </model>
+
+</scene>

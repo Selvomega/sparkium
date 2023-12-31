@@ -127,7 +127,7 @@
             <rotation value="-174 52 -180"/>
         </transform>
 
-        <material type="lambertian">
+        <material type="glossy">
             <albedo value="1 1 1"/>
         </material>
     </model>
@@ -140,8 +140,9 @@
             <rotation value="-180 50 -180"/>
         </transform>
 
-        <material type="lambertian">
+        <material type="metallic">
             <albedo value="0.615 0.574 0.249"/>
+            <!-- <albedo value="1.0 0.81 0.0"/> -->
         </material>
     </model>
 
