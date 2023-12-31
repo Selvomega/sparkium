@@ -146,16 +146,11 @@ glm::vec3 Material::ctBRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, cons
     // Dealt like Lambertian material temporarily but without adding albedo color. 
     // `inDir` is not used here, so it is still fine even if invalid `hit_record.prev_direction` is passed in when explicitly sampling the light. 
     // TODO : Emission BRDF
-    std::cout << "EMISSION" << std::endl;
-    std::cout << "emission" << emission[0]<< "  " << emission[1]<< "  " << emission[2]<< "  " << std::endl;
-    std::cout << "emission_strength" << emission_strength << std::endl;
     return emission * emission_strength;
   }
   else if (material_type == MATERIAL_TYPE_METALLIC) {
     // Cook-Torrance BRDF for metallic surfaces
-    std::cout << "METALLIC" << std::endl;
     if (SameSideCheck(inDir, outDir, hit_record)) {
-      std::cout << "METALLIC aaa" << std::endl;
       glm::vec3 normal = hit_record.textured_normal;
       glm::vec3 halfway = glm::normalize(-inDir + outDir);
 
@@ -164,11 +159,8 @@ glm::vec3 Material::ctBRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, cons
       // float cosTheta = glm::clamp(-glm::dot(normal, inDir), 0.0f, 1.0f);
       // glm::vec3 F0 = glm::vec3(0.04f); // Assuming non-metallic surface
       glm::vec3 F0 = albedo_color; 
-      std::cout << "F0"<< "  " << F0[0]<< "  " << F0[1]<< "  " << F0[2]<< "  " << std::endl;
-      std::cout << "cosTheta"<< "  " << cosTheta << std::endl;
       glm::vec3 fresnel = F0 + (1.0f - F0) * pow(1.0f - cosTheta, 5.0f);
       // fresnel become (1,1,1), why?
-      std::cout << "fresnel"<< "  " << fresnel[0]<< "  " << fresnel[1]<< "  " << fresnel[2] << std::endl;
       // Microfacet Distribution (Trowbridge-Reitz GGX) 
       float roughness = 0.1; // Roughness value of the surface
       float alpha = roughness * roughness;
@@ -186,21 +178,14 @@ glm::vec3 Material::ctBRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, cons
       float G1 = NdotL / (NdotL * (1.0f - k) + k);
       float G2 = NdotV / (NdotV * (1.0f - k) + k);
       float G = G1 * G2;
-      std::cout << G1 << G2 << G << std::endl;
-
-      std::cout << "D"<< "  " << D << std::endl;
-      std::cout << "G"<< "  " << G << std::endl;
       // Final BRDF
       glm::vec3 numerator = fresnel * D * G;
-      std::cout << "numerator"<< "  " << numerator[0]<< "  "<< numerator[1]<< "  " << numerator[2]<< "  " << std::endl;
       float denominator = 4 * glm::max(glm::dot(normal, inDir), 0.0f) * glm::max(glm::dot(normal, outDir), 0.0f) + 0.001f; // Adding a small value to avoid division by zero
 
       glm::vec3 specular = numerator / denominator;
 
       // Combine diffuse and specular
-      std::cout << "specular"<< "  "<<specular[0] << "  "<<specular[1]<< "  " << specular[2]<< "  " << std::endl;
       float max_specular = glm::max(specular[0], glm::max(specular[1], specular[2]));
-      std::cout << "max_specular" << max_specular << std::endl;
       // specular = specular / max_specular;
       specular = specular * 2.0f;
       return specular; 
@@ -210,7 +195,6 @@ glm::vec3 Material::ctBRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, cons
   else if (material_type == MATERIAL_TYPE_DIELECTRIC_GLOSSY) {
     // If the material is a glossy dielectric (non-metallic with specular highlights).
     if (SameSideCheck(inDir, outDir, hit_record)) {
-        std::cout << "GLOSSY" << std::endl;
         // Albedo color can be either a constant or obtained from a texture
         glm::vec3 albedo = albedo_color; // Assume albedo_color is a glm::vec3 representing the base color
         if (albedo_texture_id >= 0) {
@@ -235,18 +219,11 @@ glm::vec3 Material::ctBRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, cons
         float G1 = NdotL / (NdotL * (1.0f - k) + k);
         float G2 = NdotV / (NdotV * (1.0f - k) + k);
         float G = G1 * G2;
-        std::cout << 'G' << G1 << G2 << G << std::endl;
         glm::vec3 F0 = glm::vec3(0.04f); // Fresnel at normal incidence for non-metals; can be overridden based on material properties
         float cosTheta = glm::clamp(glm::dot(halfway, outDir), 0.0f, 1.0f);
         glm::vec3 F = F0 + (glm::vec3(1.0f) - F0) * pow(1.0f - cosTheta, 5.0f);
 
-        std::cout << 'F' << F[0] << F[1] << F[2] << std::endl;
-        std::cout << 'D' << D << std::endl;
-        std::cout << 'G' << G << std::endl;
-
         glm::vec3 specular = (F * D * G) / (4 * glm::max(glm::dot(normal, inDir), 0.0f) * glm::max(glm::dot(normal, outDir), 0.0f) + 0.001f); // Adding a small value to avoid division by zero
-        std::cout << "specular" << specular[0] << specular[1] << specular[2] << std::endl;
-        std::cout << "diffuse" << diffuse[0] << diffuse[1] << diffuse[2] << std::endl;
         // Combine diffuse and specular components
         return diffuse + specular;
     }

@@ -20,6 +20,9 @@ class PathTracer {
                                     int sample) const;
 
   [[nodiscard]] static std::pair<glm::vec3,float> RandomSampling(const glm::vec3 &inDir, const HitRecord &hit_record);
+  [[nodiscard]] static std::pair<glm::vec3,float> ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record);
+  [[nodiscard]] static std::pair<glm::vec3,float> CosImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record);
+  [[nodiscard]] static std::pair<glm::vec3,float> MultiImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record);
 
  private:
   const RendererSettings *render_settings_{};

@@ -25,7 +25,7 @@ struct Material {
   int pad[3];
   glm::vec3 emission{0.0f}; // The light emitted by the object. 
   float emission_strength{1.0f}; // The emission strength of the light emitted. 
-  float alpha{0.0f}; // Measuring the opacity of the object. 1 for totally opaque
+  float alpha{0.1f}; // Measuring the opacity of the object. 1 for totally opaque
   MaterialType material_type{MATERIAL_TYPE_LAMBERTIAN}; // Material type. 
   float reserve[2]{}; // What is this used for?
   Material() = default;
@@ -34,9 +34,5 @@ struct Material {
 
   [[nodiscard]] glm::vec3 BRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const HitRecord &hit_record, const Scene* scene) const;
   [[nodiscard]] glm::vec3 ctBRDF(const glm::vec3 &inDir, const glm::vec3 &outDir, const HitRecord &hit_record, const Scene* scene) const;
-  [[nodiscard]] std::pair<glm::vec3,float> UniformSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
-  [[nodiscard]] std::pair<glm::vec3,float> ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
-  [[nodiscard]] std::pair<glm::vec3,float> CosImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
-  [[nodiscard]] std::pair<glm::vec3,float> MultiImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const;
 };
 }  // namespace sparks

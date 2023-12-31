@@ -48,6 +48,99 @@ std::pair<glm::vec3,float> PathTracer::RandomSampling(const glm::vec3 &inDir, co
   return std::make_pair(ret,pdf);
 }
 
+std::pair<glm::vec3, float> PathTracer::ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) {
+  float exponent = 1.0f;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(0.0, 1.0);
+
+  float r1 = dis(gen); 
+  float r2 = dis(gen);
+
+  float phi = 2 * M_PI * r1;
+  float x = cos(phi) * sqrt(r2);
+  float y = sin(phi) * sqrt(r2);
+  float z = sqrt(1 - r2);
+
+  glm::vec3 reflectDir = glm::reflect(-inDir, hit_record.textured_normal);
+  glm::vec3 sampleDir = glm::normalize(x * reflectDir + y * glm::cross(hit_record.textured_normal, reflectDir) + z * hit_record.textured_normal);
+
+  glm::vec3 w = hit_record.textured_normal;
+  glm::vec3 u = glm::normalize(glm::cross((fabs(w.x) > 0.1f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0)), w));
+  glm::vec3 v = glm::cross(w, u);
+
+  // glm::vec3 sampleDir = glm::normalize(x * u + y * v + z * w);
+
+  float pdf = (exponent + 1) * pow(z, exponent) / (2 * M_PI);
+  glm::vec3 ret = sampleDir; 
+
+  if (glm::dot(-inDir, hit_record.textured_normal)*glm::dot(ret, hit_record.textured_normal)<1e-5) {
+    ret = -ret;
+  }
+  if (!SameSideCheck(inDir, ret, hit_record)) {
+    pdf = -10000;
+  }
+  
+  return std::make_pair(ret, pdf);
+}
+
+std::pair<glm::vec3, float> PathTracer::CosImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(0.0, 1.0);
+
+  float r1 = dis(gen); 
+  float r2 = dis(gen);
+
+  float phi = 2 * M_PI * r1;
+  float x = cos(phi) * sqrt(r2);
+  float y = sin(phi) * sqrt(r2);
+  float z = sqrt(1 - r2);
+
+  // Transform the sample point to the coordinate system defined by the normal at hit_record
+  glm::vec3 w = hit_record.textured_normal;
+  glm::vec3 u = glm::normalize(glm::cross((fabs(w.x) > 0.1f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0)), w));
+  glm::vec3 v = glm::cross(w, u);
+
+  glm::vec3 sampleDir = glm::normalize(x * u + y * v + z * w);
+
+  float pdf = abs(glm::dot(hit_record.textured_normal, sampleDir)/M_PI);
+  glm::vec3 ret = sampleDir;
+
+  if (glm::dot(-inDir, hit_record.textured_normal)*glm::dot(ret, hit_record.textured_normal)<1e-5) {
+    ret = -ret;
+  }
+  if (!SameSideCheck(inDir, ret, hit_record)) {
+    pdf = -10000;
+  }
+
+  return std::make_pair(ret, pdf);
+}
+
+std::pair<glm::vec3, float> PathTracer::MultiImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) {
+
+  // TODO
+  return RandomSampling(inDir, hit_record);
+
+  float cos_weight = 0.5f;
+  float brdf_weight = 1 - cos_weight;
+  auto cos_sample = CosImportanceSampling(inDir, hit_record);
+  auto brdf_sample = ImportanceSampling(inDir, hit_record);
+  // return std::make_pair(cos_sample.first*cos_weight+brdf_sample.first*brdf_weight, cos_sample.second*cos_weight+brdf_sample.second*brdf_weight);
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(0.0, 1.0);
+
+  float r1 = dis(gen); 
+
+  if (r1<cos_weight) {
+    return cos_sample;
+  }
+  else {
+    return brdf_sample;
+  }
+}
+
 glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
                                 glm::vec3 direction,
                                 int x,
@@ -143,8 +236,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
       else if (material.material_type==MATERIAL_TYPE_LAMBERTIAN) {
         // Lambertian material 
         origin = hit_record.position;
-        // auto p = material.CosImportanceSampling(direction, hit_record);
-        auto p = material.MultiImportanceSampling(direction, hit_record);
+        auto p = MultiImportanceSampling(direction, hit_record);
         auto out_direction = p.first;
         auto pdf = p.second;
         if (pdf<0) {
@@ -161,8 +253,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
       }
       else if (material.material_type==MATERIAL_TYPE_METALLIC) {
         origin = hit_record.position;
-        // auto p = material.CosImportanceSampling(direction, hit_record);
-        auto p = material.MultiImportanceSampling(direction, hit_record);
+        auto p = MultiImportanceSampling(direction, hit_record);
         auto out_direction = p.first;
         auto pdf = p.second;
         if (pdf<0) {
@@ -179,8 +270,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
       }
       else if (material.material_type==MATERIAL_TYPE_DIELECTRIC_GLOSSY) {
         origin = hit_record.position;
-        // auto p = material.CosImportanceSampling(direction, hit_record);
-        auto p = material.MultiImportanceSampling(direction, hit_record);
+        auto p = MultiImportanceSampling(direction, hit_record);
         auto out_direction = p.first;
         auto pdf = p.second;
         if (pdf<0) {
@@ -357,116 +447,6 @@ glm::vec3 PathTracer::SampleRayOld(glm::vec3 origin,
     }
   }
   return radiance;
-}
-
-
-
-std::pair<glm::vec3,float> Material::UniformSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {
-  /*
-  Sample a random direction in the hemisphere currently. 
-  Do sanity check for 3 times. 
-  Return the direction and the pdf value at the direction. 
-  */
-  // This is Uniform Sampling.
-  glm::vec3 ret = glm::ballRand(1.0f);
-  if (!SameSideCheck(inDir, ret, hit_record)) {
-    ret = -ret;
-  }
-  return std::make_pair(ret,1/(2*M_PI));
-}
-
-std::pair<glm::vec3, float> Material::ImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {
-  float exponent = 1.0f;
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<> dis(0.0, 1.0);
-
-  float r1 = dis(gen); 
-  float r2 = dis(gen);
-
-  float phi = 2 * M_PI * r1;
-  float x = cos(phi) * sqrt(r2);
-  float y = sin(phi) * sqrt(r2);
-  float z = sqrt(1 - r2);
-
-  glm::vec3 reflectDir = glm::reflect(-inDir, hit_record.textured_normal);
-  glm::vec3 sampleDir = glm::normalize(x * reflectDir + y * glm::cross(hit_record.textured_normal, reflectDir) + z * hit_record.textured_normal);
-
-  glm::vec3 w = hit_record.textured_normal;
-  glm::vec3 u = glm::normalize(glm::cross((fabs(w.x) > 0.1f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0)), w));
-  glm::vec3 v = glm::cross(w, u);
-
-  // glm::vec3 sampleDir = glm::normalize(x * u + y * v + z * w);
-
-  float pdf = (exponent + 1) * pow(z, exponent) / (2 * M_PI);
-  glm::vec3 ret = sampleDir; 
-
-  if (glm::dot(-inDir, hit_record.textured_normal)*glm::dot(ret, hit_record.textured_normal)<1e-5) {
-    ret = -ret;
-  }
-  if (!SameSideCheck(inDir, ret, hit_record)) {
-    pdf = -10000;
-  }
-  
-  return std::make_pair(ret, pdf);
-}
-
-
-
-
-std::pair<glm::vec3, float> Material::CosImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<> dis(0.0, 1.0);
-
-  float r1 = dis(gen); 
-  float r2 = dis(gen);
-
-  float phi = 2 * M_PI * r1;
-  float x = cos(phi) * sqrt(r2);
-  float y = sin(phi) * sqrt(r2);
-  float z = sqrt(1 - r2);
-
-  // Transform the sample point to the coordinate system defined by the normal at hit_record
-  glm::vec3 w = hit_record.textured_normal;
-  glm::vec3 u = glm::normalize(glm::cross((fabs(w.x) > 0.1f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0)), w));
-  glm::vec3 v = glm::cross(w, u);
-
-  glm::vec3 sampleDir = glm::normalize(x * u + y * v + z * w);
-
-  float pdf = glm::dot(hit_record.textured_normal, sampleDir) / M_PI;
-  glm::vec3 ret = sampleDir;
-
-  if (glm::dot(-inDir, hit_record.textured_normal)*glm::dot(ret, hit_record.textured_normal)<1e-5) {
-    ret = -ret;
-  }
-  if (!SameSideCheck(inDir, ret, hit_record)) {
-    pdf = -10000;
-  }
-
-  return std::make_pair(ret, pdf);
-}
-
-
-
-std::pair<glm::vec3, float> Material::MultiImportanceSampling(const glm::vec3 &inDir, const HitRecord &hit_record) const {
-  float cos_weight = 0.5f;
-  float brdf_weight = 1 - cos_weight;
-  auto cos_sample = Material::CosImportanceSampling(inDir, hit_record);
-  auto brdf_sample = Material::ImportanceSampling(inDir, hit_record);
-  // return std::make_pair(cos_sample.first*cos_weight+brdf_sample.first*brdf_weight, cos_sample.second*cos_weight+brdf_sample.second*brdf_weight);
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<> dis(0.0, 1.0);
-
-  float r1 = dis(gen); 
-
-  if (r1<cos_weight) {
-    return cos_sample;
-  }
-  else {
-    return brdf_sample;
-  }
 }
 
 
