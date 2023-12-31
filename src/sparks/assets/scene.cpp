@@ -1,16 +1,20 @@
 ﻿#include "sparks/assets/scene.h"
 
+#include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "imgui.h"
 #include "sparks/assets/accelerated_mesh.h"
+#include "sparks/assets/material.h"
 #include "sparks/util/util.h"
 
 namespace sparks {
 
 Scene::Scene() {
   AddTexture(Texture(1, 1, glm::vec4{1.0f}, SAMPLE_TYPE_LINEAR), "Pure White");
-  AddTexture(Texture(1, 1, glm::vec4{0.0f}, SAMPLE_TYPE_LINEAR), "Pure Black");
+  AddTexture(Texture(1, 1, glm::vec4{0.0f,0.0f,0.0f,1.0f}, SAMPLE_TYPE_LINEAR), "Pure Black");
+  AddTexture(Texture(1, 1, glm::vec4{0.5f,0.5f,1.0f,1.0f}, SAMPLE_TYPE_LINEAR), "Normal Base");
 }
 
 int Scene::AddTexture(const Texture &texture, const std::string &name) {
@@ -250,6 +254,18 @@ float Scene::TraceRay(const glm::vec3 &origin,
     hit_record->geometry_normal = glm::normalize(hit_record->geometry_normal);
     hit_record->normal = glm::normalize(hit_record->normal);
     hit_record->tangent = glm::normalize(hit_record->tangent);
+    // Initialize the textured normal.
+    if (hit_record->hit_entity_id>=0) {
+      Material material = GetEntity(hit_record->hit_entity_id).GetMaterial();
+      // If the object has a normal map.
+      glm::vec3 bitangent = glm::cross(hit_record->normal, hit_record->tangent);
+      glm::vec3 normal_map_color = GetTexture(material.normal_texture_id).Sample(hit_record->tex_coord);
+      float t_coefficient = 2*normal_map_color.x-1;
+      float b_coefficient = 2*normal_map_color.y-1;
+      float n_coefficient = 2*normal_map_color.z-1;
+      glm::vec3 raw_normal = t_coefficient*hit_record->tangent + b_coefficient*bitangent + n_coefficient*hit_record->normal;
+      hit_record->textured_normal = glm::normalize(raw_normal);
+    }
   }
   return result;
 }

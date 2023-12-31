@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scene>
+    <camera>
+        <transform type="lookat">
+            <eye value="5.5 2.5 0"/>
+            <center value="-10 2.5 0"/>
+            <up value="0.0 1.0 0.0"/>
+        </transform>
+        <fov value="75"/>
+        <speed value="1"/>
+    </camera>
+
+    <model type="obj" name="Large Plane">
+        <filename value="../../meshes/large_plane.obj"/>
+        <transform type="world">
+            <scale value="1.0 1.0 1.0"/>
+            <translation value="0 0 0"/>
+            <rotation value="0 0 0"/>
+        </transform>
+
+        <material type="lambertian">
+            <albedo value="0.8 1 0.7"/>
+        </material>
+    </model>
+
+    <model type="obj" name="Arena">
+        <filename value="../../meshes/arena.obj"/>
+        <transform type="world">
+            <scale value="1.0 1.0 1.0"/>
+            <translation value="0 0 0"/>
+            <rotation value="0 0 0"/>
+        </transform>
+
+        <material type="lambertian">
+            <albedo value="1 0.93 0.88"/>
+        </material>
+    </model>
+
+    <model type="obj" name="Zeus">
+        <filename value="../../meshes/zeus.obj"/>
+        <transform type="world">
+            <scale value="1.0 1.0 1.0"/>
+            <translation value="0 0 0"/>
+            <rotation value="0 0 0"/>
+        </transform>
+
+        <material type="lambertian">
+            <albedo value="1 1 1"/>
+			<albedo_texture value="../../textures/ZeusTexture.jpg"/>
+			<normal_texture value="../../textures/ZeusNormal.jpg"/>
+        </material>
+    </model>
+
+    <model type="obj" name="Hera">
+        <filename value="../../meshes/hera.obj"/>
+        <transform type="world">
+            <scale value="1.0 1.0 1.0"/>
+            <translation value="0 0 0"/>
+            <rotation value="0 0 0"/>
+        </transform>
+
+        <material type="lambertian">
+            <albedo value="1 1 1"/>
+            <albedo_texture value="../../textures/HeraTexture.jpg"/>
+			<normal_texture value="../../textures/HeraNormal.jpg"/>
+        </material>
+    </model>
+
+    <model type="obj" name="Gandalf">
+        <filename value="../../meshes/gandalf.obj"/>
+        <transform type="world">
+            <scale value="0.8 0.8 0.8"/>
+            <translation value="0 0 -0.2"/>
+            <rotation value="0 0 0"/>
+        </transform>
+
+        <material type="lambertian">
+            <albedo value="1 1 1"/>
+            <albedo_texture value="../../textures/GandalfTexture.jpg"/>
+			<normal_texture value="../../textures/GandalfNormal.jpg"/>
+        </material>
+    </model>
+
+    <model type="obj" name="Creeper">
+        <filename value="../../meshes/creeper.obj"/>
+        <transform type="world">
+            <scale value="1.0 1.0 1.0"/>
+            <translation value="2.7 0 1.5"/>
+            <rotation value="-180 50 -180"/>
+        </transform>
+
+        <material type="emission">
+            <albedo value="1 1 1"/>
+            <albedo_texture value="../../textures/CreeperTexture.jpg"/>
+            <emission value="1.0 1.0 1.0"/>
+            <emission_strength value="30.0"/>
+        </material>
+    </model>
+
+    <model type="obj" name="Jesus">
+        <filename value="../../meshes/jesus.obj"/>
+        <transform type="world">
+            <scale value="0.8 0.8 0.8"/>
+            <translation value="0 0 0.3"/>
+            <rotation value="0 0 0"/>
+        </transform>
+
+        <material type="lambertian">
+            <albedo value="1 1 1"/>
+            <albedo_texture value="../../textures/JesusTexture.jpg"/>
+            <albedo_texture value="../../textures/JesusNormal.jpg"/>
+        </material>
+    </model>
+
+    <model type="obj" name="T-Rex">
+        <filename value="../../meshes/trex.obj"/>
+        <transform type="world">
+            <scale value="1.0 1.0 1.0"/>
+            <translation value="0 0 0"/>
+            <rotation value="0 0 0"/>
+        </transform>
+
+        <material type="metallic">
+            <albedo value="0.83 0.69 0.22"/>
+			<normal_texture value="../../textures/TRexNormal.jpg"/>
+        </material>
+    </model>
+
+    <model type="obj" name="Hanuman">
+        <filename value="../../meshes/hanuman.obj"/>
+        <transform type="world">
+            <scale value="1.0 1.0 1.0"/>
+            <translation value="0 0 0"/>
+            <rotation value="0 0 0"/>
+        </transform>
+
+        <material type="lambertian">
+            <albedo value="1 1 1"/>
+            <albedo_texture value="../../textures/HanumanTexture.jpg"/>
+			<normal_texture value="../../textures/HanumanNormal.jpg"/>
+        </material>
+    </model>
+
+    <model type="obj" name="Guanyu">
+        <filename value="../../meshes/guanyu.obj"/>
+        <transform type="world">
+            <scale value="0.75 0.75 0.75"/>
+            <translation value="0 0 0"/>
+            <rotation value="0 0 0"/>
+        </transform>
+
+        <material type="transmissive">
+            <albedo value="1 1 1"/>
+			<normal_texture value="../../textures/GuanyuNormal.jpg"/>
+        </material>
+    </model>
+
+</scene>

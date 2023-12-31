@@ -5,6 +5,7 @@ struct Vertex {
   vec3 normal;
   vec3 tangent;
   vec2 tex_coord;
+  float tangentHandedness;
 };
 
 Vertex GetVertex(uint index) {

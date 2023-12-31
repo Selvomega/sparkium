@@ -3,7 +3,9 @@
 #include "sparks/assets/model.h"
 #include "sparks/assets/util.h"
 #include "sparks/assets/vertex.h"
+#include "sparks/util/mikktspace.h"
 #include "vector"
+
 
 namespace sparks {
 class Mesh : public Model {
@@ -36,5 +38,12 @@ class Mesh : public Model {
   std::vector<uint32_t> indices_;
   AxisAlignedBoundingBox boundingbox_;
   void InitBoundingBox();
+
+  static int getNumFaces(const SMikkTSpaceContext *pContext);
+  static int getNumVerticesOfFace(const SMikkTSpaceContext *pContext, const int iFace);
+  static void getPosition(const SMikkTSpaceContext *pContext, float fvPosOut[], const int iFace, const int iVert);
+  static void getNormal(const SMikkTSpaceContext *pContext, float fvNormOut[], const int iFace, const int iVert);
+  static void getTexCoord(const SMikkTSpaceContext *pContext, float fvTexcOut[], const int iFace, const int iVert);
+  static void setTSpaceBasic(const SMikkTSpaceContext *pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert);
 };
 }  // namespace sparks

@@ -20,6 +20,7 @@ struct Vertex {
   }
 
   bool operator==(const Vertex &vertex) const {
+    // Notice that tangents are also compared. 
     return position == vertex.position && normal == vertex.normal &&
            tangent == vertex.tangent && tex_coord == tex_coord;
   }

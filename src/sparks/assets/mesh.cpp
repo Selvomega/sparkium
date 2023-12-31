@@ -1,6 +1,7 @@
 #include "sparks/assets/mesh.h"
 
 #include "fstream"
+#include "glm/geometric.hpp"
 #include "iomanip"
 #include "iostream"
 #include "sparks/assets/aabb.h"
@@ -275,8 +276,30 @@ bool Mesh::LoadObjFile(const std::string &obj_file_path, Mesh &mesh) {
       index_offset += fv;
     }
   }
-  mesh = Mesh(vertices, indices);
-  mesh.MergeVertices();
+
+  std::vector<Vertex> new_vertices = {};
+  for (int i=0; i<indices.size(); i++) {
+    new_vertices.push_back(vertices[indices[i]]);
+    indices[i] = i;
+  }
+  mesh = Mesh(new_vertices, indices);
+
+  // Computing the tangent
+  
+  SMikkTSpaceInterface interface;
+  interface.m_getNumFaces = getNumFaces;
+  interface.m_getNumVerticesOfFace = getNumVerticesOfFace;
+  interface.m_getPosition = getPosition;
+  interface.m_getNormal = getNormal;
+  interface.m_getTexCoord = getTexCoord;
+  interface.m_setTSpace = NULL;
+  interface.m_setTSpaceBasic = setTSpaceBasic;
+  SMikkTSpaceContext mikkContext;
+  mikkContext.m_pInterface = &interface;
+  mikkContext.m_pUserData = static_cast<Mesh*>(&mesh);
+  genTangSpaceDefault(&mikkContext);
+  // You should first compute the tangents, then merge the vertices. 
+  mesh.MergeVertices(); 
   mesh.InitBoundingBox();
   return true;
 }
@@ -386,6 +409,28 @@ Mesh::Mesh(const tinyxml2::XMLElement *element) {
       indices_.push_back(i + 1);
       indices_.push_back(i + 2);
     }
+
+    // Computing the tangent
+    std::vector<Vertex> new_vertices = {};
+    for (int i=0; i<indices.size(); i++) {
+      new_vertices.push_back(vertices_[indices_[i]]);
+      indices_[i] = i;
+    }
+    vertices_ = new_vertices;
+    SMikkTSpaceInterface interface;
+    interface.m_getNumFaces = getNumFaces;
+    interface.m_getNumVerticesOfFace = getNumVerticesOfFace;
+    interface.m_getPosition = getPosition;
+    interface.m_getNormal = getNormal;
+    interface.m_getTexCoord = getTexCoord;
+    interface.m_setTSpace = NULL;
+    interface.m_setTSpaceBasic = setTSpaceBasic;
+    SMikkTSpaceContext mikkContext;
+    mikkContext.m_pInterface = &interface;
+    mikkContext.m_pUserData = static_cast<Mesh*>(this);
+    genTangSpaceDefault(&mikkContext);
+
+    // You should first compute the tangents, then merge the vertices. 
     MergeVertices();
     InitBoundingBox();
   }
@@ -401,6 +446,56 @@ glm::vec3 Mesh::Random() const {
 
 void Mesh::InitBoundingBox(){
   boundingbox_ = GetAABB(glm::mat4{1.0f});
+}
+
+int Mesh::getNumFaces(const SMikkTSpaceContext *pContext) {
+  Mesh* mesh = static_cast<Mesh*>(pContext->m_pUserData);
+  return (mesh->GetIndices().size())/3;
+}
+
+int Mesh::getNumVerticesOfFace(const SMikkTSpaceContext *pContext, const int iFace) {
+  // Should we always return 3?
+  return 3;
+}
+
+void Mesh::getPosition(const SMikkTSpaceContext *pContext, float fvPosOut[], const int iFace, const int iVert) {
+  Mesh* mesh = static_cast<Mesh*>(pContext->m_pUserData);
+  int vertexIndex = mesh->indices_[iFace * 3 + iVert];
+  const glm::vec3 &position = mesh->vertices_[vertexIndex].position;
+  fvPosOut[0] = position.x;
+  fvPosOut[1] = position.y;
+  fvPosOut[2] = position.z;
+}
+
+void Mesh::getNormal(const SMikkTSpaceContext *pContext, float fvNormOut[], const int iFace, const int iVert) {
+  Mesh* mesh = static_cast<Mesh*>(pContext->m_pUserData);
+  int vertexIndex = mesh->indices_[iFace * 3 + iVert];
+  const glm::vec3 &normal = mesh->vertices_[vertexIndex].position;
+  fvNormOut[0] = normal.x;
+  fvNormOut[1] = normal.y;
+  fvNormOut[2] = normal.z;
+}
+
+void Mesh::getTexCoord(const SMikkTSpaceContext *pContext, float fvTexcOut[], const int iFace, const int iVert) {
+  Mesh* mesh = static_cast<Mesh*>(pContext->m_pUserData);
+  int vertexIndex = mesh->indices_[iFace * 3 + iVert];
+  const glm::vec2 &texture = mesh->vertices_[vertexIndex].tex_coord;
+  fvTexcOut[0] = texture.x;
+  fvTexcOut[1] = texture.y;
+}
+
+void Mesh::setTSpaceBasic(const SMikkTSpaceContext *pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert) {
+  // Cast the user data to your mesh type
+  Mesh* mesh = static_cast<Mesh*>(pContext->m_pUserData);
+  // Calculate the actual index of the vertex in the mesh's vertices array
+  int vertexIndex = mesh->indices_[iFace * 3 + iVert];
+  // Apply the tangent vector to the appropriate vertex
+  Vertex &vertex = mesh->vertices_[vertexIndex];
+  vertex.tangent.x = fvTangent[0];
+  vertex.tangent.y = fvTangent[1];
+  vertex.tangent.z = fvTangent[2];
+  // Optionally, store the handedness to reconstruct the bitangent in the shader
+  vertex.tangent = glm::normalize(fSign*vertex.tangent);
 }
 
 }  // namespace sparks

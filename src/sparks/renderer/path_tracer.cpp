@@ -22,11 +22,30 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/random.hpp>
+
 namespace sparks {
 PathTracer::PathTracer(const RendererSettings *render_settings,
                        const Scene *scene) {
   render_settings_ = render_settings;
   scene_ = scene;
+}
+
+std::pair<glm::vec3,float> PathTracer::RandomSampling(const glm::vec3 &inDir, const HitRecord &hit_record) {
+  /*
+  Sample a random direction in the hemisphere currently. 
+  */
+  // TODO
+  float pdf = 1/(2*M_PI);
+  glm::vec3 ret = glm::ballRand(1.0f);
+  if (glm::dot(-inDir, hit_record.textured_normal)*glm::dot(ret, hit_record.textured_normal)<1e-5) {
+    ret = -ret;
+  }
+  if (!SameSideCheck(inDir, ret, hit_record)) {
+    pdf = -1;
+  }
+  return std::make_pair(ret,pdf);
 }
 
 glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
@@ -87,9 +106,9 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
           }
           auto material = scene_->GetEntity(hit_record.hit_entity_id).GetMaterial();
           auto light_material = scene_->GetEntity(i).GetMaterial();
-          auto cosine1 = std::abs(glm::dot(global_direction, temp_hit_record.normal)); 
-          auto cosine2 = std::abs(glm::dot(global_direction, hit_record.normal)); 
-          radiance += prev_throughput*light_material.emission*light_material.emission_strength*material.ctBRDF(hit_record.prev_direction, direction, hit_record, scene_) * cosine1 * cosine2 * glm::length(glm::cross(v1.position-v0.position, v2.position-v0.position)) / (2*glm::length(raw_direction)*glm::length(raw_direction));
+          auto cosine1 = std::abs(glm::dot(global_direction, temp_hit_record.textured_normal)); 
+          auto cosine2 = std::abs(glm::dot(global_direction, hit_record.textured_normal)); 
+          radiance += prev_throughput * light_material.albedo_color * glm::vec3{scene_->GetTextures()[light_material.albedo_texture_id].Sample(temp_hit_record.tex_coord)} * light_material.emission * light_material.emission_strength * material.ctBRDF(hit_record.prev_direction, direction, hit_record, scene_) * cosine1 * cosine2 * glm::length(glm::cross(v1.position-v0.position, v2.position-v0.position)) / (2*glm::length(raw_direction)*glm::length(raw_direction));
         }
       }
     }
@@ -103,7 +122,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         // If the material is emissive. 
         if (j==0) {
           // If the first radiance
-          radiance += throughput * material.emission * material.emission_strength;
+          radiance += throughput * material.emission * material.emission_strength * material.albedo_color * glm::vec3{scene_->GetTextures()[material.albedo_texture_id].Sample(hit_record.tex_coord)};
         }
         break; // Break since we have explicitly sampled the light source. 
       }
@@ -112,8 +131,8 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         origin = hit_record.position;
         hit_record.prev_direction = direction;
         // The following line is true no matter what is the direction of the normal
-        direction = direction - 2*glm::dot(direction,hit_record.normal)*hit_record.normal;
-        if (!SanityCheck(hit_record.prev_direction, direction, hit_record)) {
+        direction = direction - 2*glm::dot(direction,hit_record.textured_normal)*hit_record.textured_normal;
+        if (!SameSideCheck(hit_record.prev_direction, direction, hit_record)) {
           // If sanity check not passed, 
           // Eliminate the ray? 
           radiance *= 0;
@@ -128,8 +147,13 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         auto p = material.MultiImportanceSampling(direction, hit_record);
         auto out_direction = p.first;
         auto pdf = p.second;
+        if (pdf<0) {
+          // which means that the light did not pass the sanity check.
+          throughput*=0;
+          break;
+        }
         // This line?
-        auto cosine = std::abs(glm::dot(out_direction, hit_record.normal)); 
+        auto cosine = std::abs(glm::dot(out_direction, hit_record.textured_normal)); 
         prev_throughput = throughput;
         throughput *= material.ctBRDF(direction, out_direction, hit_record, scene_)*cosine/pdf;
         hit_record.prev_direction = direction;
@@ -141,8 +165,13 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         auto p = material.MultiImportanceSampling(direction, hit_record);
         auto out_direction = p.first;
         auto pdf = p.second;
+        if (pdf<0) {
+          // which means that the light did not pass the sanity check.
+          throughput*=0;
+          break;
+        }
         // This line?
-        auto cosine = std::abs(glm::dot(out_direction, hit_record.normal)); 
+        auto cosine = std::abs(glm::dot(out_direction, hit_record.textured_normal)); 
         prev_throughput = throughput;
         throughput *= material.ctBRDF(direction, out_direction, hit_record, scene_)*cosine/pdf;
         hit_record.prev_direction = direction;
@@ -154,42 +183,95 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         auto p = material.MultiImportanceSampling(direction, hit_record);
         auto out_direction = p.first;
         auto pdf = p.second;
+        if (pdf<0) {
+          // which means that the light did not pass the sanity check.
+          throughput*=0;
+          break;
+        }
         // This line?
-        auto cosine = std::abs(glm::dot(out_direction, hit_record.normal)); 
+        auto cosine = std::abs(glm::dot(out_direction, hit_record.textured_normal)); 
         prev_throughput = throughput;
         throughput *= material.ctBRDF(direction, out_direction, hit_record, scene_)*cosine/pdf;
         hit_record.prev_direction = direction;
         direction = out_direction;
       }
-      else if (material.material_type == MATERIAL_TYPE_TRANSMISSIVE) {
-        // Transmissive material
+      else if (material.material_type==MATERIAL_TYPE_TRANSMISSIVE) {
+        float eta = 1.5; // Hand-written eta value (sin(i)/sin(o))
         origin = hit_record.position;
-
-        // float eta = material.is_inside ? material.refractive_index : 1.0f / material.refractive_index;
-        float eta = 1.0f;
-
-        glm::vec3 unit_direction = glm::normalize(direction);
-        float cos_theta = glm::min(glm::dot(-unit_direction, hit_record.normal), 1.0f);
-        float sin_theta = glm::sqrt(1.0f - cos_theta * cos_theta);
-
-        bool cannot_refract = eta * sin_theta > 1.0f;
-        glm::vec3 refracted_direction;
-
-        // if (cannot_refract) {
-        //   // Total internal reflection
-        //   refracted_direction = glm::reflect(unit_direction, hit_record.normal);
-        // } else {
-        //   // Snell's law refraction
-        //   refracted_direction = glm::refract(unit_direction, hit_record.normal, eta);
-        // }
-        refracted_direction = glm::refract(unit_direction, hit_record.normal, eta);
         hit_record.prev_direction = direction;
-        direction = refracted_direction;
-        prev_throughput = throughput;
-        throughput *= material.albedo_color; // Assuming `transmittance` represents the attenuation of the light as it passes through the material
+        if (hit_record.front_face) {
+          // If the light shoots at the front face of the material. 
+          prev_throughput = throughput;
+          throughput *= material.albedo_color;
+          std::random_device rd;
+          std::mt19937 rng(rd());
+          std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+          float rand_value = dist(rng);
+          if (rand_value<material.alpha) {
+            // The light should be reflected. 
+            // The following line is true no matter what is the direction of the normal
+            direction = direction - 2*glm::dot(direction,hit_record.textured_normal)*hit_record.textured_normal;
+            if (!SameSideCheck(hit_record.prev_direction, direction, hit_record)) {
+              // If the two lights are not on the same side, 
+              // Eliminate the ray? 
+              radiance *= 0;
+              break;
+            }
+            continue;
+          }
+          else {
+            // The light should be refracted. 
+            float sin_i = glm::length(glm::cross(direction, hit_record.textured_normal));
+            float sin_o = sin_i/eta;
+            float cos_o = sqrt(1-sin_o*sin_o);
+            glm::vec3 norm_dir = (glm::dot(direction,hit_record.textured_normal)<0) ? -hit_record.textured_normal : hit_record.textured_normal;
+            glm::vec3 tang_dir = glm::normalize(direction-hit_record.textured_normal*glm::dot(direction,hit_record.textured_normal));
+            direction = glm::normalize(sin_o*tang_dir+cos_o*norm_dir);
+            if (SameSideCheck(hit_record.prev_direction, direction, hit_record)) {
+              // If the two lights are on the same side, 
+              // Eliminate the ray? 
+              radiance *= 0;
+              break;
+            }
+            continue;
+          }
+        }
+        else {
+          // If the light shoots at the back face of the material. 
+          std::random_device rd;
+          std::mt19937 rng(rd());
+          std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+          float rand_value = dist(rng);
+          float sin_i = glm::length(glm::cross(direction, hit_record.textured_normal));
+          float sin_o = sin_i*eta;
+          if (rand_value<material.alpha || sin_o>=1) {
+            // The light should be reflected. 
+            // Considering total reflection. 
+            direction = direction - 2*glm::dot(direction,hit_record.textured_normal)*hit_record.textured_normal;
+            if (!SameSideCheck(hit_record.prev_direction, direction, hit_record)) {
+              // If the two lights are not on the same side, 
+              // Eliminate the ray? 
+              radiance *= 0;
+              break;
+            }
+            continue;
+          }
+          else {
+            // The light should be refracted. 
+            float cos_o = sqrt(1-sin_o*sin_o);
+            glm::vec3 norm_dir = (glm::dot(direction,hit_record.textured_normal)<0) ? -hit_record.textured_normal : hit_record.textured_normal;
+            glm::vec3 tang_dir = glm::normalize(direction-hit_record.textured_normal*glm::dot(direction,hit_record.textured_normal));
+            direction = glm::normalize(sin_o*tang_dir+cos_o*norm_dir);
+            if (SameSideCheck(hit_record.prev_direction, direction, hit_record)) {
+              // If the two lights are on the same side, 
+              // Eliminate the ray? 
+              radiance *= 0;
+              break;
+            }
+            continue;
+          }
+        }
       }
-
-
       else {
         // The other cases. 
         // TODO
@@ -202,7 +284,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         direction = scene_->GetEnvmapLightDirection();
         radiance += throughput * scene_->GetEnvmapMinorColor();
         throughput *=
-            std::max(glm::dot(direction, hit_record.normal), 0.0f) * 2.0f;
+            std::max(glm::dot(direction, hit_record.textured_normal), 0.0f) * 2.0f;
         if (scene_->TraceRay(origin, direction, 1e-3f, 1e4f, nullptr) < 0.0f) {
           // If the ray to the environment is not blocked, which means that the environment light can directly reach the object. 
           radiance += throughput * scene_->GetEnvmapMajorColor();
@@ -262,7 +344,7 @@ glm::vec3 PathTracer::SampleRayOld(glm::vec3 origin,
         direction = scene_->GetEnvmapLightDirection();
         radiance += throughput * scene_->GetEnvmapMinorColor();
         throughput *=
-            std::max(glm::dot(direction, hit_record.normal), 0.0f) * 2.0f;
+            std::max(glm::dot(direction, hit_record.textured_normal), 0.0f) * 2.0f;
         if (scene_->TraceRay(origin, direction, 1e-3f, 1e4f, nullptr) < 0.0f) {
           // If the ray to the environment is not blocked, which means that the environment light can directly reach the object. 
           radiance += throughput * scene_->GetEnvmapMajorColor();
@@ -287,7 +369,7 @@ std::pair<glm::vec3,float> Material::UniformSampling(const glm::vec3 &inDir, con
   */
   // This is Uniform Sampling.
   glm::vec3 ret = glm::ballRand(1.0f);
-  if (!SanityCheck(inDir, ret, hit_record)) {
+  if (!SameSideCheck(inDir, ret, hit_record)) {
     ret = -ret;
   }
   return std::make_pair(ret,1/(2*M_PI));
@@ -307,10 +389,10 @@ std::pair<glm::vec3, float> Material::ImportanceSampling(const glm::vec3 &inDir,
   float y = sin(phi) * sqrt(r2);
   float z = sqrt(1 - r2);
 
-  glm::vec3 reflectDir = glm::reflect(-inDir, hit_record.normal);
-  glm::vec3 sampleDir = glm::normalize(x * reflectDir + y * glm::cross(hit_record.normal, reflectDir) + z * hit_record.normal);
+  glm::vec3 reflectDir = glm::reflect(-inDir, hit_record.textured_normal);
+  glm::vec3 sampleDir = glm::normalize(x * reflectDir + y * glm::cross(hit_record.textured_normal, reflectDir) + z * hit_record.textured_normal);
 
-  glm::vec3 w = hit_record.normal;
+  glm::vec3 w = hit_record.textured_normal;
   glm::vec3 u = glm::normalize(glm::cross((fabs(w.x) > 0.1f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0)), w));
   glm::vec3 v = glm::cross(w, u);
 
@@ -318,9 +400,14 @@ std::pair<glm::vec3, float> Material::ImportanceSampling(const glm::vec3 &inDir,
 
   float pdf = (exponent + 1) * pow(z, exponent) / (2 * M_PI);
   glm::vec3 ret = sampleDir; 
-  if (!SanityCheck(inDir, ret, hit_record)) {
+
+  if (glm::dot(-inDir, hit_record.textured_normal)*glm::dot(ret, hit_record.textured_normal)<1e-5) {
     ret = -ret;
   }
+  if (!SameSideCheck(inDir, ret, hit_record)) {
+    pdf = -10000;
+  }
+  
   return std::make_pair(ret, pdf);
 }
 
@@ -341,17 +428,22 @@ std::pair<glm::vec3, float> Material::CosImportanceSampling(const glm::vec3 &inD
   float z = sqrt(1 - r2);
 
   // Transform the sample point to the coordinate system defined by the normal at hit_record
-  glm::vec3 w = hit_record.normal;
+  glm::vec3 w = hit_record.textured_normal;
   glm::vec3 u = glm::normalize(glm::cross((fabs(w.x) > 0.1f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0)), w));
   glm::vec3 v = glm::cross(w, u);
 
   glm::vec3 sampleDir = glm::normalize(x * u + y * v + z * w);
 
-  float pdf = glm::dot(hit_record.normal, sampleDir) / M_PI;
+  float pdf = glm::dot(hit_record.textured_normal, sampleDir) / M_PI;
   glm::vec3 ret = sampleDir;
-  if (!SanityCheck(inDir, ret, hit_record)) {
+
+  if (glm::dot(-inDir, hit_record.textured_normal)*glm::dot(ret, hit_record.textured_normal)<1e-5) {
     ret = -ret;
   }
+  if (!SameSideCheck(inDir, ret, hit_record)) {
+    pdf = -10000;
+  }
+
   return std::make_pair(ret, pdf);
 }
 

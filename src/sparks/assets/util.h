@@ -19,6 +19,6 @@ glm::mat4 XmlTransformMatrix(tinyxml2::XMLElement *transform_element);
 
 glm::mat4 XmlComposeTransformMatrix(tinyxml2::XMLElement *object_element);
 
-bool SanityCheck(const glm::vec3 &inDir, const glm::vec3 &outDir, const HitRecord &hit_record);
+bool SameSideCheck(const glm::vec3 &inDir, const glm::vec3 &outDir, const HitRecord &hit_record);
 
 }  // namespace sparks

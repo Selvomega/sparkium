@@ -1,4 +1,4 @@
-file(GLOB_RECURSE source_files *.cpp *.h)
+file(GLOB_RECURSE source_files *.cpp *.h *.c)
 
 set(CURRENT_LIB_NAME sparks_${MODULE_NAME}_lib)
 
