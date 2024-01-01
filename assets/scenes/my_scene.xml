@@ -19,7 +19,7 @@
         </transform>
 
         <material type="lambertian">
-            <albedo value="0.8 1 0.7"/>
+            <albedo value="1 1 1"/>
         </material>
     </model>
 
